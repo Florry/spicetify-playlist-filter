@@ -3,7 +3,7 @@
 		"name": "Playlist filter",
 		"description": "Adds filtering to the playlists panel to quickly find playlists by name without using the search box.",
 		"preview": "screenshot-new.png",
-		"main": "dist/playlist-artwork.js",
+		"main": "dist/playlist-filter.js",
 		"readme": "README.md",
 		"authors": [
 			{
