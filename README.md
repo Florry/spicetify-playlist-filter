@@ -5,6 +5,9 @@ Adds filtering to the playlists panel to quickly find playlists by name without 
 ![](./img/playlist-filtering.gif)
 ![](./img/playlist-filtering2.webp)
 
+Adds keyboard shortcut F to focus on filter input field. It can be turned off through the spicetify settings.
+![](./img/config.png)
+
 # Installation
 
 - Copy `./dist/playlist-filter.js` to `~/.spicetify/plugins`
@@ -16,6 +19,12 @@ spicetify apply
 ```
 
 or install through [spicetify marketplace](https://github.com/CharlieS1103/spicetify-marketplace)
+
+# TODO:
+
+- Add right click menue to filtered playlist
+- Make it possible to drag-add tracks to playlists through filtered result
+-
 
 # Made with spicetify Creator
 
