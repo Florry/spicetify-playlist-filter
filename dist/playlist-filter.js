@@ -305,7 +305,6 @@ if (x === "react-dom") return Spicetify.ReactDOM;
     const div = document.createElement("div");
     import_react_dom.default.render(/* @__PURE__ */ import_react3.default.createElement(SearchInput, null), div);
     sidebarItem.parentNode.insertBefore(div, sidebarItem.nextSibling);
-    console.log("YO");
     registerSubMenues();
   }
   var app_default = main;

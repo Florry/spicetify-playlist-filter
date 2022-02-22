@@ -11,8 +11,6 @@ async function main() {
 
 	sidebarItem.parentNode!.insertBefore(div, sidebarItem.nextSibling);
 
-	console.log("YO");
-
 	registerSubMenues();
 }
 
