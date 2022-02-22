@@ -196,7 +196,6 @@ if (x === "react-dom") return Spicetify.ReactDOM;
       const library = await SpotifyClient.getLibrary();
       const playlists2 = flattenLibrary(library);
       setPlaylists(playlists2);
-      console.log("playlists", playlists2);
     };
     const searchInput = (0, import_react2.useRef)(null);
     (0, import_react2.useEffect)(() => {

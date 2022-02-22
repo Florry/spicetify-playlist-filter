@@ -17,8 +17,6 @@ export const SearchInput = (() => {
 		const playlists = flattenLibrary(library);
 
 		setPlaylists(playlists);
-
-		console.log("playlists", playlists);
 	};
 
 	const searchInput = useRef<HTMLInputElement>(null);
