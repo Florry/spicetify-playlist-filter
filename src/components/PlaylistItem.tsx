@@ -15,7 +15,6 @@ export const PlaylistItem = ({ playlist, searchTerm }: Props) => {
 			return name;
 		else {
 			let highlightedName = name.replace(new RegExp(searchTerm, "gi"), (match) => {
-				// return `<span style="background-color: #161616fa; color: #fff;">${match}</span>`;
 				return `<span style="background-color: rgb(255 255 255 / 8%); color: #fff;">${match}</span>`;
 			});
 
