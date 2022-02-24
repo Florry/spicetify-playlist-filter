@@ -43,7 +43,8 @@ export const PlaylistItem = ({ playlist, searchTerm }: Props) => {
 	};
 
 	return (
-		<li className="GlueDropTarget GlueDropTarget--albums GlueDropTarget--tracks GlueDropTarget--local-tracks GlueDropTarget--episodes GlueDropTarget--playlists GlueDropTarget--folders"
+		<li
+			className="GlueDropTarget GlueDropTarget--albums GlueDropTarget--tracks GlueDropTarget--local-tracks GlueDropTarget--episodes GlueDropTarget--playlists GlueDropTarget--folders"
 			style={listItemStyling}
 		>
 			<div
