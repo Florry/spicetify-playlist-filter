@@ -1,13 +1,17 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { SpotifyClient } from "../clients/SpotifyClient";
 import { getConfig } from "../config/Config";
 import { USE_KEYBOARD_SHORTCUTS } from "../constants/constants";
 import { Playlist } from "../models/Playlist";
 import { flattenLibrary } from "../utils/utils";
 import { PlaylistItem } from "./PlaylistItem";
-import { clearButtonStyling, JUa6JJNj7R_Y3i4P8YUXStyling, mainRootlistContentStyling, osContentStyling, osPaddingStyling, osViewportStyling, searchInputStyling, searchStyling } from "./styling/PlaylistFilterStyling";
+import { clearButtonStyling, searchInputStyling, searchStyling, ulStyling } from "./styling/PlaylistFilterStyling";
 
-export const SearchInput = (() => {
+interface Props {
+	onFilter: (searchCleared: boolean) => void;
+}
+
+export const SearchInput = (({ onFilter }: Props) => {
 	const [playlists, setPlaylists] = useState<Playlist[]>([]);
 	const [playlistContainer, setPlaylistContainer] = useState(document.querySelector("#spicetify-playlist-list"));
 	const [searchTerm, setSearchTerm] = useState("");
@@ -45,21 +49,26 @@ export const SearchInput = (() => {
 
 		await setSearchTerm(value === " " ? "" : value);
 
-		if (value === "" || value === " ")
+		if (value === "" || value === " ") {
+			onFilter(true);
 			playlistContainer?.removeAttribute("style");
-		else
+		}
+		else {
+			onFilter(false);
 			playlistContainer?.setAttribute("style", "display: none;");
+		}
+
 	}
 
 	const clearFilter = async () => {
 		await filterPlaylists(" ");
 	};
 
-	const searchResults = playlists.filter(playlist => {
+	const searchResults = useMemo(() => playlists.filter(playlist => {
 		return playlist.name.toLowerCase().includes(searchTerm.toLowerCase());
-	});
+	}), [searchTerm]);
 
-	const sortedSearchResults = searchResults.sort((a, b) => {
+	const sortedSearchResults = useMemo(() => searchResults.sort((a, b) => {
 		const aMatch = a.name.toLowerCase().indexOf(searchTerm.toLowerCase());
 		const bMatch = b.name.toLowerCase().indexOf(searchTerm.toLowerCase());
 
@@ -71,7 +80,7 @@ export const SearchInput = (() => {
 			return -1;
 		else
 			return 0;
-	});
+	}), [searchResults]);
 
 	return (
 		<>
@@ -116,38 +125,16 @@ export const SearchInput = (() => {
 
 			{
 				searchTerm &&
-				<div
-					className="main-rootlist-rootlistContent"
-					style={mainRootlistContentStyling}>
-					<div
-						className="os-padding"
-						style={osPaddingStyling}
-					>
-						<div
-							className="os-viewport os-viewport-native-scrollbars-invisible"
-							style={osViewportStyling}
-						>
-							<div className="os-content"
-								style={osContentStyling}>
-								<ul>
-									<div
-										className="JUa6JJNj7R_Y3i4P8YUX"
-										style={JUa6JJNj7R_Y3i4P8YUXStyling}
-									>
-										{sortedSearchResults
-											.map((playlist: any) => (
-												<PlaylistItem
-													searchTerm={searchTerm}
-													playlist={playlist}
-													key={playlist.uri}
-												/>
-											))}
-									</div>
-								</ul>
-							</div>
-						</div>
-					</div>
-				</div>
+				<ul style={ulStyling}>
+					{sortedSearchResults
+						.map((playlist: any, i: number) => (
+							<PlaylistItem
+								searchTerm={searchTerm}
+								playlist={playlist}
+								key={playlist.uri + i}
+							/>
+						))}
+				</ul>
 			}
 		</>
 	);

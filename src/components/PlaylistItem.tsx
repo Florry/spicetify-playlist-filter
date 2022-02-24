@@ -1,6 +1,6 @@
 import React from "react";
 import { Playlist } from "../models/Playlist";
-import { listItemStyling, mainRootlistItemRootlistItemStyling, mainRootlistTextWrapperStyling } from "./styling/PlaylistItemStyling";
+import { listItemStyling, mainRootlistItemRootlistItemStyling } from "./styling/PlaylistItemStyling";
 
 interface Props {
 	playlist: Playlist;
@@ -15,7 +15,7 @@ export const PlaylistItem = ({ playlist, searchTerm }: Props) => {
 			return name;
 		else {
 			let highlightedName = name.replace(new RegExp(searchTerm, "gi"), (match) => {
-				return `<span style="background-color: #161616fa; color: #fff;">${match}</span>`;
+				return `<span style="background-color: rgb(255 255 255 / 8%); color: #fff;">${match}</span>`;
 			});
 
 			highlightedName = highlightedName.replace(/span> /g, "span>&nbsp;");
@@ -42,7 +42,8 @@ export const PlaylistItem = ({ playlist, searchTerm }: Props) => {
 	};
 
 	return (
-		<li className="GlueDropTarget GlueDropTarget--playlists GlueDropTarget--folders GlueDropTarget--tracks GlueDropTarget--albums GlueDropTarget--episodes GlueDropTarget--playlists GlueDropTarget--folders"
+		<li
+			className="GlueDropTarget GlueDropTarget--albums GlueDropTarget--tracks GlueDropTarget--local-tracks GlueDropTarget--episodes GlueDropTarget--playlists GlueDropTarget--folders"
 			style={listItemStyling}
 		>
 			<div
@@ -61,7 +62,6 @@ export const PlaylistItem = ({ playlist, searchTerm }: Props) => {
 					<span
 						className="main-rootlist-textWrapper main-type-viola"
 						dir="auto"
-						style={mainRootlistTextWrapperStyling}
 					>
 						<span dangerouslySetInnerHTML={{ __html: getNameWithHighlightedSearchTerm() }} />
 					</span>
