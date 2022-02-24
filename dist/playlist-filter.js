@@ -82,10 +82,6 @@ if (x === "react-dom") return Spicetify.ReactDOM;
   // src/components/styling/PlaylistItemStyling.tsx
   var listItemStyling = { zIndex: 5001 };
   var mainRootlistItemRootlistItemStyling = { marginLeft: 24 };
-  var mainRootlistTextWrapperStyling = {
-    display: "flex",
-    alignItems: "center"
-  };
 
   // src/components/PlaylistItem.tsx
   var PlaylistItem = ({ playlist, searchTerm }) => {
@@ -95,7 +91,7 @@ if (x === "react-dom") return Spicetify.ReactDOM;
         return name;
       else {
         let highlightedName = name.replace(new RegExp(searchTerm, "gi"), (match) => {
-          return `<span style="background-color: #161616fa; color: #fff;">${match}</span>`;
+          return `<span style="background-color: rgb(255 255 255 / 8%); color: #fff;">${match}</span>`;
         });
         highlightedName = highlightedName.replace(/span> /g, "span>&nbsp;");
         highlightedName = highlightedName.replace(/ <span/g, "&nbsp;<span");
@@ -117,7 +113,7 @@ if (x === "react-dom") return Spicetify.ReactDOM;
       });
     };
     return /* @__PURE__ */ import_react.default.createElement("li", {
-      className: "GlueDropTarget GlueDropTarget--playlists GlueDropTarget--folders GlueDropTarget--tracks GlueDropTarget--albums GlueDropTarget--episodes GlueDropTarget--playlists GlueDropTarget--folders",
+      className: "GlueDropTarget GlueDropTarget--albums GlueDropTarget--tracks GlueDropTarget--local-tracks GlueDropTarget--episodes GlueDropTarget--playlists GlueDropTarget--folders",
       style: listItemStyling
     }, /* @__PURE__ */ import_react.default.createElement("div", {
       className: "main-rootlist-rootlistItem",
@@ -132,63 +128,46 @@ if (x === "react-dom") return Spicetify.ReactDOM;
       onClick: goToPlaylist
     }, /* @__PURE__ */ import_react.default.createElement("span", {
       className: "main-rootlist-textWrapper main-type-viola",
-      dir: "auto",
-      style: mainRootlistTextWrapperStyling
+      dir: "auto"
     }, /* @__PURE__ */ import_react.default.createElement("span", {
       dangerouslySetInnerHTML: { __html: getNameWithHighlightedSearchTerm() }
     })))));
   };
 
   // src/components/styling/PlaylistFilterStyling.tsx
-  var clearButtonStyling = {
-    width: 39,
-    height: 39,
-    display: "flex",
-    justifyContent: "center",
-    justifyItems: "center",
-    alignContent: "center",
-    padding: 12,
-    backgroundColor: "#000",
-    fontWeight: "bold",
-    zIndex: 5e3
-  };
   var searchStyling = {
     display: "flex",
-    top: 0,
     width: "100%",
     paddingLeft: 16,
     paddingRight: 16,
-    zIndex: 5e3,
-    marginTop: -1
+    paddingTop: 7
+  };
+  var clearButtonStyling = {
+    width: 39,
+    height: 39,
+    padding: 12,
+    backgroundColor: "transparent",
+    fontWeight: "bold"
   };
   var searchInputStyling = {
     width: "100%",
-    backgroundColor: "#000",
+    backgroundColor: "transparent",
     border: "none",
     padding: 10,
     height: 39,
     color: "var(--text-subdued)",
-    fontSize: 14,
-    zIndex: 5e3
+    fontSize: "inherit"
   };
-  var osContentStyling = {
-    padding: "8px 0px",
-    height: "100%",
-    width: "100%;",
-    marginTop: 56,
+  var ulStyling = {
+    contain: "none",
+    paddingTop: 8,
     overflow: "scroll",
-    paddingBottom: 150
+    height: "inherit",
+    maxHeight: "calc(100% - 100px)"
   };
-  var mainRootlistContentStyling = {
-    flex: 1,
-    height: "100%"
-  };
-  var osPaddingStyling = { zIndex: 4999 };
-  var osViewportStyling = { zIndex: 4999 };
-  var JUa6JJNj7R_Y3i4P8YUXStyling = { contain: "none" };
 
   // src/components/PlaylistFilter.tsx
-  var SearchInput = () => {
+  var SearchInput = ({ onFilter }) => {
     const [playlists, setPlaylists] = (0, import_react2.useState)([]);
     const [playlistContainer, setPlaylistContainer] = (0, import_react2.useState)(document.querySelector("#spicetify-playlist-list"));
     const [searchTerm, setSearchTerm] = (0, import_react2.useState)("");
@@ -214,18 +193,21 @@ if (x === "react-dom") return Spicetify.ReactDOM;
       if (!playlistContainer)
         await setPlaylistContainer(document.querySelector("#spicetify-playlist-list"));
       await setSearchTerm(value === " " ? "" : value);
-      if (value === "" || value === " ")
+      if (value === "" || value === " ") {
+        onFilter(true);
         playlistContainer == null ? void 0 : playlistContainer.removeAttribute("style");
-      else
+      } else {
+        onFilter(false);
         playlistContainer == null ? void 0 : playlistContainer.setAttribute("style", "display: none;");
+      }
     };
     const clearFilter = async () => {
       await filterPlaylists(" ");
     };
-    const searchResults = playlists.filter((playlist) => {
+    const searchResults = (0, import_react2.useMemo)(() => playlists.filter((playlist) => {
       return playlist.name.toLowerCase().includes(searchTerm.toLowerCase());
-    });
-    const sortedSearchResults = searchResults.sort((a, b) => {
+    }), [searchTerm]);
+    const sortedSearchResults = (0, import_react2.useMemo)(() => searchResults.sort((a, b) => {
       const aMatch = a.name.toLowerCase().indexOf(searchTerm.toLowerCase());
       const bMatch = b.name.toLowerCase().indexOf(searchTerm.toLowerCase());
       if (aMatch > bMatch)
@@ -234,7 +216,7 @@ if (x === "react-dom") return Spicetify.ReactDOM;
         return -1;
       else
         return 0;
-    });
+    }), [searchResults]);
     return /* @__PURE__ */ import_react2.default.createElement(import_react2.default.Fragment, null, /* @__PURE__ */ import_react2.default.createElement("div", {
       style: searchStyling
     }, /* @__PURE__ */ import_react2.default.createElement("input", {
@@ -267,26 +249,13 @@ if (x === "react-dom") return Spicetify.ReactDOM;
       className: "main-rootlist-rootlistDivider"
     }), /* @__PURE__ */ import_react2.default.createElement("div", {
       className: "main-rootlist-rootlistDividerGradient"
-    })), searchTerm && /* @__PURE__ */ import_react2.default.createElement("div", {
-      className: "main-rootlist-rootlistContent",
-      style: mainRootlistContentStyling
-    }, /* @__PURE__ */ import_react2.default.createElement("div", {
-      className: "os-padding",
-      style: osPaddingStyling
-    }, /* @__PURE__ */ import_react2.default.createElement("div", {
-      className: "os-viewport os-viewport-native-scrollbars-invisible",
-      style: osViewportStyling
-    }, /* @__PURE__ */ import_react2.default.createElement("div", {
-      className: "os-content",
-      style: osContentStyling
-    }, /* @__PURE__ */ import_react2.default.createElement("ul", null, /* @__PURE__ */ import_react2.default.createElement("div", {
-      className: "JUa6JJNj7R_Y3i4P8YUX",
-      style: JUa6JJNj7R_Y3i4P8YUXStyling
-    }, sortedSearchResults.map((playlist) => /* @__PURE__ */ import_react2.default.createElement(PlaylistItem, {
+    })), searchTerm && /* @__PURE__ */ import_react2.default.createElement("ul", {
+      style: ulStyling
+    }, sortedSearchResults.map((playlist, i) => /* @__PURE__ */ import_react2.default.createElement(PlaylistItem, {
       searchTerm,
       playlist,
-      key: playlist.uri
-    })))))))));
+      key: playlist.uri + i
+    }))));
   };
 
   // src/menues/subMenues.ts
@@ -302,7 +271,15 @@ if (x === "react-dom") return Spicetify.ReactDOM;
   async function main() {
     const sidebarItem = await waitForSidebar();
     const div = document.createElement("div");
-    import_react_dom.default.render(/* @__PURE__ */ import_react3.default.createElement(SearchInput, null), div);
+    const onFilter = (searchCleared) => {
+      if (searchCleared)
+        div.removeAttribute("style");
+      else
+        div.setAttribute("style", "height: 100vh; max-height: 100%;");
+    };
+    import_react_dom.default.render(/* @__PURE__ */ import_react3.default.createElement(SearchInput, {
+      onFilter
+    }), div);
     sidebarItem.parentNode.insertBefore(div, sidebarItem.nextSibling);
     registerSubMenues();
   }
