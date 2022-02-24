@@ -15,7 +15,8 @@ export const PlaylistItem = ({ playlist, searchTerm }: Props) => {
 			return name;
 		else {
 			let highlightedName = name.replace(new RegExp(searchTerm, "gi"), (match) => {
-				return `<span style="background-color: #161616fa; color: #fff;">${match}</span>`;
+				// return `<span style="background-color: #161616fa; color: #fff;">${match}</span>`;
+				return `<span style="background-color: #f7f7f737; color: #fff;">${match}</span>`;
 			});
 
 			highlightedName = highlightedName.replace(/span> /g, "span>&nbsp;");
@@ -42,7 +43,7 @@ export const PlaylistItem = ({ playlist, searchTerm }: Props) => {
 	};
 
 	return (
-		<li className="GlueDropTarget GlueDropTarget--playlists GlueDropTarget--folders GlueDropTarget--tracks GlueDropTarget--albums GlueDropTarget--episodes GlueDropTarget--playlists GlueDropTarget--folders"
+		<li className="GlueDropTarget GlueDropTarget--albums GlueDropTarget--tracks GlueDropTarget--local-tracks GlueDropTarget--episodes GlueDropTarget--playlists GlueDropTarget--folders"
 			style={listItemStyling}
 		>
 			<div

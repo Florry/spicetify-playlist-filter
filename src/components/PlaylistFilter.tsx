@@ -74,81 +74,85 @@ export const SearchInput = (() => {
 	});
 
 	return (
-		<>
-			<div style={searchStyling}>
-				<input
-					style={searchInputStyling}
-					// @ts-ignore
-					ref={searchInput}
-					placeholder="Filter"
-					value={searchTerm}
-					onChange={(e) => filterPlaylists(e.target.value)}
-					onKeyDown={(e) => {
-						if (e.key === "Escape") {
-							clearFilter();
-							searchInput.current?.blur();
-						}
-					}}
-				/>
+		<div>
+			<div>
+				<div style={searchStyling}>
+					<input
+						style={searchInputStyling}
+						// @ts-ignore
+						ref={searchInput}
+						placeholder="Filter"
+						value={searchTerm}
+						onChange={(e) => filterPlaylists(e.target.value)}
+						onKeyDown={(e) => {
+							if (e.key === "Escape") {
+								clearFilter();
+								searchInput.current?.blur();
+							}
+						}}
+					/>
+					{
+						searchTerm !== "" &&
+						<div
+							style={clearButtonStyling}
+							title="Clear filter"
+							onClick={clearFilter}
+						>
+							<svg
+								style={{
+									fill: "var(--text-subdued)"
+								}}
+								dangerouslySetInnerHTML={{
+									// @ts-ignore
+									__html: Spicetify.SVGIcons["x"]
+								}} />
+						</div>
+					}
+				</div>
+
+
+				<div className="main-rootlist-rootlistDividerContainer">
+					<hr className="main-rootlist-rootlistDivider" />
+					<div className="main-rootlist-rootlistDividerGradient" />
+				</div>
+
 				{
-					searchTerm !== "" &&
+					searchTerm &&
 					<div
-						style={clearButtonStyling}
-						title="Clear filter"
-						onClick={clearFilter}
-					>
-						<svg
-							style={{
-								fill: "var(--text-subdued)"
-							}}
-							dangerouslySetInnerHTML={{
-								// @ts-ignore
-								__html: Spicetify.SVGIcons["x"]
-							}} />
-					</div>
-				}
-			</div>
-
-			<div className="main-rootlist-rootlistDividerContainer">
-				<hr className="main-rootlist-rootlistDivider" />
-				<div className="main-rootlist-rootlistDividerGradient" />
-			</div>
-
-			{
-				searchTerm &&
-				<div
-					className="main-rootlist-rootlistContent"
-					style={mainRootlistContentStyling}>
-					<div
-						className="os-padding"
-						style={osPaddingStyling}
+					// className="main-rootlist-rootlistContent"
+					// style={mainRootlistContentStyling}
 					>
 						<div
-							className="os-viewport os-viewport-native-scrollbars-invisible"
-							style={osViewportStyling}
+						// className="os-padding"
+						// style={osPaddingStyling}
 						>
-							<div className="os-content"
-								style={osContentStyling}>
-								<ul>
-									<div
-										className="JUa6JJNj7R_Y3i4P8YUX"
-										style={JUa6JJNj7R_Y3i4P8YUXStyling}
-									>
-										{sortedSearchResults
-											.map((playlist: any) => (
-												<PlaylistItem
-													searchTerm={searchTerm}
-													playlist={playlist}
-													key={playlist.uri}
-												/>
-											))}
-									</div>
-								</ul>
+							<div
+								// className="os-viewport os-viewport-native-scrollbars-invisible"
+								style={osViewportStyling}
+							>
+								<div className="os-content"
+									style={osContentStyling}>
+									<ul>
+										<div
+											className="JUa6JJNj7R_Y3i4P8YUX"
+											style={JUa6JJNj7R_Y3i4P8YUXStyling}
+										>
+											{sortedSearchResults
+												.map((playlist: any) => (
+													<PlaylistItem
+														searchTerm={searchTerm}
+														playlist={playlist}
+														key={playlist.uri}
+													/>
+												))}
+										</div>
+									</ul>
+								</div>
 							</div>
 						</div>
 					</div>
-				</div>
-			}
-		</>
+				}
+			</div>
+		</div>
 	);
 });
