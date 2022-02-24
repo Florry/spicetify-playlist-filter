@@ -7,7 +7,15 @@ async function main() {
 	const sidebarItem = await waitForSidebar();
 	const div = document.createElement("div");
 
-	ReactDOM.render(<SearchInput />, div);
+	/** To get scrolling in the filtered list working*/
+	const onFilter = (searchCleared: boolean) => {
+		if (searchCleared)
+			div.removeAttribute("style");
+		else
+			div.setAttribute("style", "height: 100vh; max-height: 100%;");
+	};
+
+	ReactDOM.render(<SearchInput onFilter={onFilter} />, div);
 
 	sidebarItem.parentNode!.insertBefore(div, sidebarItem.nextSibling);
 
