@@ -32,7 +32,7 @@ export const mainRootlistContentStyling: React.CSSProperties = {
 export const ulStyling: React.CSSProperties = {
 	contain: "none",
 	paddingTop: 8,
-	overflow: "scroll",
+	overflow: "auto",
 	height: "inherit",
 	maxHeight: "calc(100% - 100px)"
 };

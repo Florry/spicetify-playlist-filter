@@ -161,7 +161,7 @@ if (x === "react-dom") return Spicetify.ReactDOM;
   var ulStyling = {
     contain: "none",
     paddingTop: 8,
-    overflow: "scroll",
+    overflow: "auto",
     height: "inherit",
     maxHeight: "calc(100% - 100px)"
   };
