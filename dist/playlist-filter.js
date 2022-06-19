@@ -80,8 +80,12 @@ if (x === "react-dom") return Spicetify.ReactDOM;
   var import_react = __toESM(__require("react"));
 
   // src/components/styling/PlaylistItemStyling.tsx
-  var listItemStyling = { zIndex: 5001 };
-  var mainRootlistItemRootlistItemStyling = { marginLeft: 24 };
+  var listItemStyling = {
+    zIndex: 5001
+  };
+  var mainRootlistItemRootlistItemStyling = {
+    marginLeft: 24
+  };
 
   // src/components/PlaylistItem.tsx
   var PlaylistItem = ({ playlist, searchTerm }) => {
@@ -116,18 +120,18 @@ if (x === "react-dom") return Spicetify.ReactDOM;
       className: "GlueDropTarget GlueDropTarget--albums GlueDropTarget--tracks GlueDropTarget--local-tracks GlueDropTarget--episodes GlueDropTarget--playlists GlueDropTarget--folders",
       style: listItemStyling
     }, /* @__PURE__ */ import_react.default.createElement("div", {
-      className: "main-rootlist-rootlistItem",
+      className: "whXv9jYuEgS1DPTmPCe_ playlist-item",
       draggable: "true",
       "aria-expanded": "false",
       style: mainRootlistItemRootlistItemStyling
     }, /* @__PURE__ */ import_react.default.createElement("a", {
       "aria-current": "page",
-      className: "standalone-ellipsis-one-line main-rootlist-rootlistItemLink main-rootlist-rootlistItemLink--filtered-playlist",
+      className: "standalone-ellipsis-one-line utSR0FVkHnII_aL8TOcu",
       draggable: "false",
       href: `/playlist/${playlist.uri.replace("spotify:playlist:", "")}`,
       onClick: goToPlaylist
     }, /* @__PURE__ */ import_react.default.createElement("span", {
-      className: "main-rootlist-textWrapper main-type-viola",
+      className: "Type__TypeElement-goli3j-0 lfGOlT VjIb8SfYTkc4wMpqqj3f",
       dir: "auto"
     }, /* @__PURE__ */ import_react.default.createElement("span", {
       dangerouslySetInnerHTML: { __html: getNameWithHighlightedSearchTerm() }
@@ -243,13 +247,9 @@ if (x === "react-dom") return Spicetify.ReactDOM;
       dangerouslySetInnerHTML: {
         __html: Spicetify.SVGIcons["x"]
       }
-    }))), /* @__PURE__ */ import_react2.default.createElement("div", {
-      className: "main-rootlist-rootlistDividerContainer"
-    }, /* @__PURE__ */ import_react2.default.createElement("hr", {
-      className: "main-rootlist-rootlistDivider"
-    }), /* @__PURE__ */ import_react2.default.createElement("div", {
-      className: "main-rootlist-rootlistDividerGradient"
-    })), searchTerm && /* @__PURE__ */ import_react2.default.createElement("ul", {
+    }))), /* @__PURE__ */ import_react2.default.createElement("hr", {
+      className: "FBPrcmuqo3yv5UfWSRl5"
+    }), searchTerm && /* @__PURE__ */ import_react2.default.createElement("ul", {
       style: ulStyling
     }, sortedSearchResults.map((playlist, i) => /* @__PURE__ */ import_react2.default.createElement(PlaylistItem, {
       searchTerm,
@@ -280,12 +280,12 @@ if (x === "react-dom") return Spicetify.ReactDOM;
     import_react_dom.default.render(/* @__PURE__ */ import_react3.default.createElement(SearchInput, {
       onFilter
     }), div);
-    sidebarItem.parentNode.insertBefore(div, sidebarItem.nextSibling);
+    sidebarItem.parentNode.insertBefore(div, sidebarItem);
     registerSubMenues();
   }
   var app_default = main;
   async function waitForSidebar() {
-    const query = ".main-rootlist-rootlistDividerContainer";
+    const query = ".tojGvx6tcIBmKlICMJAZ";
     let playlistPanel = document.querySelector(query);
     while (!playlistPanel) {
       playlistPanel = document.querySelector(query);

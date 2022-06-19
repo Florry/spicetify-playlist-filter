@@ -1,4 +1,4 @@
 export interface Collaborator {
-	count: number;
-	items: any[];
+    count: number;
+    items: any[];
 }

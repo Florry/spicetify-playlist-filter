@@ -1,15 +1,15 @@
 [
-	{
-		"name": "Playlist filter",
-		"description": "Adds filtering to the playlists panel to quickly find playlists by name without using the search box.",
-		"preview": "img/playlist-filtering.gif",
-		"main": "dist/playlist-filter.js",
-		"readme": "README.md",
-		"authors": [
-			{
-				"name": "Florry",
-				"url": "https://github.com/Florry"
-			}
-		]
-	}
+    {
+        "name": "Playlist filter",
+        "description": "Adds filtering to the playlists panel to quickly find playlists by name without using the search box.",
+        "preview": "img/playlist-filtering.gif",
+        "main": "dist/playlist-filter.js",
+        "readme": "README.md",
+        "authors": [
+            {
+                "name": "Florry",
+                "url": "https://github.com/Florry"
+            }
+        ]
+    }
 ]
