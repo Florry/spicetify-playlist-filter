@@ -84,7 +84,7 @@ export const SearchInput = (({ onFilter }: Props) => {
 
     return (
         <>
-            <div style={searchStyling}>
+            <div className="main-navBar-navBarItem" style={searchStyling}>
                 <input
                     style={searchInputStyling}
                     // @ts-ignore
@@ -118,22 +118,21 @@ export const SearchInput = (({ onFilter }: Props) => {
                 }
             </div>
 
-            {/* <div className="main-rootlist-rootlistDividerContainer"> */}
-            <hr className="FBPrcmuqo3yv5UfWSRl5" />
-            {/* </div> */}
-
             {
                 searchTerm &&
-                <ul style={ulStyling}>
-                    {sortedSearchResults
-                        .map((playlist: any, i: number) => (
-                            <PlaylistItem
-                                searchTerm={searchTerm}
-                                playlist={playlist}
-                                key={playlist.uri + i}
-                            />
-                        ))}
-                </ul>
+                <>
+                    <div className="main-rootlist-rootlistDividerContainer"><hr className="main-rootlist-rootlistDivider" /><div className="main-rootlist-rootlistDividerGradient"></div></div>
+                    <ul style={ulStyling}>
+                        {sortedSearchResults
+                            .map((playlist: any, i: number) => (
+                                <PlaylistItem
+                                    searchTerm={searchTerm}
+                                    playlist={playlist}
+                                    key={playlist.uri + i}
+                                />
+                            ))}
+                    </ul>
+                </>
             }
         </>
     );

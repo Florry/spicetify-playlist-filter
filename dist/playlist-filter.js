@@ -120,18 +120,18 @@ if (x === "react-dom") return Spicetify.ReactDOM;
       className: "GlueDropTarget GlueDropTarget--albums GlueDropTarget--tracks GlueDropTarget--local-tracks GlueDropTarget--episodes GlueDropTarget--playlists GlueDropTarget--folders",
       style: listItemStyling
     }, /* @__PURE__ */ import_react.default.createElement("div", {
-      className: "whXv9jYuEgS1DPTmPCe_ playlist-item",
+      className: "main-rootlist-rootlistItem playlist-item",
       draggable: "true",
       "aria-expanded": "false",
       style: mainRootlistItemRootlistItemStyling
     }, /* @__PURE__ */ import_react.default.createElement("a", {
       "aria-current": "page",
-      className: "standalone-ellipsis-one-line utSR0FVkHnII_aL8TOcu",
+      className: "standalone-ellipsis-one-line main-rootlist-rootlistItemLink",
       draggable: "false",
       href: `/playlist/${playlist.uri.replace("spotify:playlist:", "")}`,
       onClick: goToPlaylist
     }, /* @__PURE__ */ import_react.default.createElement("span", {
-      className: "Type__TypeElement-goli3j-0 lfGOlT VjIb8SfYTkc4wMpqqj3f",
+      className: "Type__TypeElement-goli3j-0 gJFKvJ main-rootlist-textWrapper",
       dir: "auto"
     }, /* @__PURE__ */ import_react.default.createElement("span", {
       dangerouslySetInnerHTML: { __html: getNameWithHighlightedSearchTerm() }
@@ -222,6 +222,7 @@ if (x === "react-dom") return Spicetify.ReactDOM;
         return 0;
     }), [searchResults]);
     return /* @__PURE__ */ import_react2.default.createElement(import_react2.default.Fragment, null, /* @__PURE__ */ import_react2.default.createElement("div", {
+      className: "main-navBar-navBarItem",
       style: searchStyling
     }, /* @__PURE__ */ import_react2.default.createElement("input", {
       style: searchInputStyling,
@@ -247,15 +248,19 @@ if (x === "react-dom") return Spicetify.ReactDOM;
       dangerouslySetInnerHTML: {
         __html: Spicetify.SVGIcons["x"]
       }
-    }))), /* @__PURE__ */ import_react2.default.createElement("hr", {
-      className: "FBPrcmuqo3yv5UfWSRl5"
-    }), searchTerm && /* @__PURE__ */ import_react2.default.createElement("ul", {
+    }))), searchTerm && /* @__PURE__ */ import_react2.default.createElement(import_react2.default.Fragment, null, /* @__PURE__ */ import_react2.default.createElement("div", {
+      className: "main-rootlist-rootlistDividerContainer"
+    }, /* @__PURE__ */ import_react2.default.createElement("hr", {
+      className: "main-rootlist-rootlistDivider"
+    }), /* @__PURE__ */ import_react2.default.createElement("div", {
+      className: "main-rootlist-rootlistDividerGradient"
+    })), /* @__PURE__ */ import_react2.default.createElement("ul", {
       style: ulStyling
     }, sortedSearchResults.map((playlist, i) => /* @__PURE__ */ import_react2.default.createElement(PlaylistItem, {
       searchTerm,
       playlist,
       key: playlist.uri + i
-    }))));
+    })))));
   };
 
   // src/menues/subMenues.ts
@@ -285,7 +290,7 @@ if (x === "react-dom") return Spicetify.ReactDOM;
   }
   var app_default = main;
   async function waitForSidebar() {
-    const query = ".tojGvx6tcIBmKlICMJAZ";
+    const query = ".main-rootlist-rootlistContent";
     let playlistPanel = document.querySelector(query);
     while (!playlistPanel) {
       playlistPanel = document.querySelector(query);

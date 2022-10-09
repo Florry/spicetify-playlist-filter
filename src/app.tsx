@@ -25,7 +25,7 @@ async function main() {
 export default main;
 
 async function waitForSidebar() {
-    const query = ".tojGvx6tcIBmKlICMJAZ";
+    const query = ".main-rootlist-rootlistContent";
 
     let playlistPanel = document.querySelector(query);
 
