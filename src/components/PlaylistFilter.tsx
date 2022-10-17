@@ -84,8 +84,13 @@ export const SearchInput = (({ onFilter }: Props) => {
 
     return (
         <>
-            <div className="main-navBar-navBarItem" style={searchStyling}>
+            <div 
+                id="playlist-filter-main-container"
+                className="main-navBar-navBarItem"
+                style={searchStyling}
+            >
                 <input
+                    id="playlist-filter-input"
                     style={searchInputStyling}
                     // @ts-ignore
                     ref={searchInput}
@@ -102,6 +107,7 @@ export const SearchInput = (({ onFilter }: Props) => {
                 {
                     searchTerm !== "" &&
                     <div
+                        id="playlist-filter-clear-btn"
                         style={clearButtonStyling}
                         title="Clear filter"
                         onClick={clearFilter}
@@ -121,8 +127,23 @@ export const SearchInput = (({ onFilter }: Props) => {
             {
                 searchTerm &&
                 <>
-                    <div className="main-rootlist-rootlistDividerContainer"><hr className="main-rootlist-rootlistDivider" /><div className="main-rootlist-rootlistDividerGradient"></div></div>
-                    <ul style={ulStyling}>
+                    <div
+                        id="playlist-filter-results-divider-container"
+                        className="main-rootlist-rootlistDividerContainer"
+                    >
+                        <hr
+                            id="playlist-filter-divider"
+                            className="main-rootlist-rootlistDivider" 
+                        />
+                        <div
+                            id="playlist-filter-results-divider-gradient"
+                            className="main-rootlist-rootlistDividerGradient"
+                        />
+                    </div>
+                    <ul 
+                        id="playlist-filter-results"
+                        style={ulStyling}
+                    >
                         {sortedSearchResults
                             .map((playlist: any, i: number) => (
                                 <PlaylistItem

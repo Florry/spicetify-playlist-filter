@@ -1,4 +1,4 @@
-var playlistDfilter = (() => {
+var playlistFilter = (() => {
   var __create = Object.create;
   var __defProp = Object.defineProperty;
   var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -95,7 +95,7 @@ if (x === "react-dom") return Spicetify.ReactDOM;
         return name;
       else {
         let highlightedName = name.replace(new RegExp(searchTerm, "gi"), (match) => {
-          return `<span style="background-color: rgb(255 255 255 / 8%); color: #fff;">${match}</span>`;
+          return `<span class="playlist-filter-results-highlight" style="background-color: rgb(255 255 255 / 8%); color: #fff;">${match}</span>`;
         });
         highlightedName = highlightedName.replace(/span> /g, "span>&nbsp;");
         highlightedName = highlightedName.replace(/ <span/g, "&nbsp;<span");
@@ -117,21 +117,21 @@ if (x === "react-dom") return Spicetify.ReactDOM;
       });
     };
     return /* @__PURE__ */ import_react.default.createElement("li", {
-      className: "GlueDropTarget GlueDropTarget--albums GlueDropTarget--tracks GlueDropTarget--local-tracks GlueDropTarget--episodes GlueDropTarget--playlists GlueDropTarget--folders",
+      className: "GlueDropTarget GlueDropTarget--albums GlueDropTarget--tracks GlueDropTarget--local-tracks GlueDropTarget--episodes GlueDropTarget--playlists GlueDropTarget--folders playlist-filter-results-list-item",
       style: listItemStyling
     }, /* @__PURE__ */ import_react.default.createElement("div", {
-      className: "main-rootlist-rootlistItem playlist-item",
+      className: "main-rootlist-rootlistItem playlist-item playlist-filter-results-playlist-item",
       draggable: "true",
       "aria-expanded": "false",
       style: mainRootlistItemRootlistItemStyling
     }, /* @__PURE__ */ import_react.default.createElement("a", {
       "aria-current": "page",
-      className: "standalone-ellipsis-one-line main-rootlist-rootlistItemLink",
+      className: "standalone-ellipsis-one-line main-rootlist-rootlistItemLink playlist-filter-results-playlist-link",
       draggable: "false",
       href: `/playlist/${playlist.uri.replace("spotify:playlist:", "")}`,
       onClick: goToPlaylist
     }, /* @__PURE__ */ import_react.default.createElement("span", {
-      className: "Type__TypeElement-goli3j-0 gJFKvJ main-rootlist-textWrapper",
+      className: "Type__TypeElement-goli3j-0 gJFKvJ main-rootlist-textWrapper playlist-filter-results-playlist-name",
       dir: "auto"
     }, /* @__PURE__ */ import_react.default.createElement("span", {
       dangerouslySetInnerHTML: { __html: getNameWithHighlightedSearchTerm() }
@@ -222,9 +222,11 @@ if (x === "react-dom") return Spicetify.ReactDOM;
         return 0;
     }), [searchResults]);
     return /* @__PURE__ */ import_react2.default.createElement(import_react2.default.Fragment, null, /* @__PURE__ */ import_react2.default.createElement("div", {
+      id: "playlist-filter-main-container",
       className: "main-navBar-navBarItem",
       style: searchStyling
     }, /* @__PURE__ */ import_react2.default.createElement("input", {
+      id: "playlist-filter-input",
       style: searchInputStyling,
       ref: searchInput,
       placeholder: "Filter",
@@ -238,6 +240,7 @@ if (x === "react-dom") return Spicetify.ReactDOM;
         }
       }
     }), searchTerm !== "" && /* @__PURE__ */ import_react2.default.createElement("div", {
+      id: "playlist-filter-clear-btn",
       style: clearButtonStyling,
       title: "Clear filter",
       onClick: clearFilter
@@ -249,12 +252,16 @@ if (x === "react-dom") return Spicetify.ReactDOM;
         __html: Spicetify.SVGIcons["x"]
       }
     }))), searchTerm && /* @__PURE__ */ import_react2.default.createElement(import_react2.default.Fragment, null, /* @__PURE__ */ import_react2.default.createElement("div", {
+      id: "playlist-filter-results-divider-container",
       className: "main-rootlist-rootlistDividerContainer"
     }, /* @__PURE__ */ import_react2.default.createElement("hr", {
+      id: "playlist-filter-divider",
       className: "main-rootlist-rootlistDivider"
     }), /* @__PURE__ */ import_react2.default.createElement("div", {
+      id: "playlist-filter-results-divider-gradient",
       className: "main-rootlist-rootlistDividerGradient"
     })), /* @__PURE__ */ import_react2.default.createElement("ul", {
+      id: "playlist-filter-results",
       style: ulStyling
     }, sortedSearchResults.map((playlist, i) => /* @__PURE__ */ import_react2.default.createElement(PlaylistItem, {
       searchTerm,

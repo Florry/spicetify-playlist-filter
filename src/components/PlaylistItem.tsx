@@ -15,7 +15,7 @@ export const PlaylistItem = ({ playlist, searchTerm }: Props) => {
             return name;
         else {
             let highlightedName = name.replace(new RegExp(searchTerm, "gi"), (match) => {
-                return `<span style="background-color: rgb(255 255 255 / 8%); color: #fff;">${match}</span>`;
+                return `<span class="playlist-filter-results-highlight" style="background-color: rgb(255 255 255 / 8%); color: #fff;">${match}</span>`;
             });
 
             highlightedName = highlightedName.replace(/span> /g, "span>&nbsp;");
@@ -41,32 +41,26 @@ export const PlaylistItem = ({ playlist, searchTerm }: Props) => {
         });
     };
 
-// const ola = (<li role="listitem" class="main-rootlist-rootlistItem playlist-item" draggable="true" style="--indentation:1;">
-//     <img class="playlist-item__img" src="https://mosaic.scdn.co/640/ab67616d0000b2733f37a380d4e0dd0399e45f04ab67616d0000b27366bf5b049e336d5b2eaab375ab67616d0000b273727c775b21608903cfca881eab67616d0000b273b0d93d82c831a2655e32762e"/>
-//     <div aria-hidden="true" class="main-rootlist-rootlistItemOverlay"/>
-//     <a class="standalone-ellipsis-one-line main-rootlist-rootlistItemLink" draggable="false" tabindex="-1" href="/playlist/2GvxLmUP5OpxNKNgx8uOzG">
-//         <span class="Type__TypeElement-goli3j-0 gJFKvJ main-rootlist-textWrapper" dir="auto">Starred x2</span></a><div class="main-rootlist-statusIcons"></div></li>);
-
     return (
         <li
-            className="GlueDropTarget GlueDropTarget--albums GlueDropTarget--tracks GlueDropTarget--local-tracks GlueDropTarget--episodes GlueDropTarget--playlists GlueDropTarget--folders"
+            className="GlueDropTarget GlueDropTarget--albums GlueDropTarget--tracks GlueDropTarget--local-tracks GlueDropTarget--episodes GlueDropTarget--playlists GlueDropTarget--folders playlist-filter-results-list-item"
             style={listItemStyling}
         >
             <div
-                className="main-rootlist-rootlistItem playlist-item"
+                className="main-rootlist-rootlistItem playlist-item playlist-filter-results-playlist-item"
                 draggable="true"
                 aria-expanded="false"
                 style={mainRootlistItemRootlistItemStyling}
             >
                 <a
                     aria-current="page"
-                    className="standalone-ellipsis-one-line main-rootlist-rootlistItemLink"
+                    className="standalone-ellipsis-one-line main-rootlist-rootlistItemLink playlist-filter-results-playlist-link"
                     draggable="false"
                     href={`/playlist/${playlist.uri.replace("spotify:playlist:", "")}`}
                     onClick={goToPlaylist}
                 >
                     <span
-                        className="Type__TypeElement-goli3j-0 gJFKvJ main-rootlist-textWrapper"
+                        className="Type__TypeElement-goli3j-0 gJFKvJ main-rootlist-textWrapper playlist-filter-results-playlist-name"
                         dir="auto"
                     >
                         <span dangerouslySetInnerHTML={{ __html: getNameWithHighlightedSearchTerm() }} />
