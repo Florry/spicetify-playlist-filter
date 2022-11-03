@@ -2,8 +2,10 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { SpotifyClient } from "../clients/SpotifyClient";
 import { getConfig } from "../config/Config";
 import { USE_KEYBOARD_SHORTCUTS } from "../constants/constants";
+import { Folder } from "../models/Folder";
 import { Playlist } from "../models/Playlist";
 import { flattenLibrary } from "../utils/utils";
+import FolderItem from "./FolderItem";
 import { PlaylistItem } from "./PlaylistItem";
 import { clearButtonStyling, searchInputStyling, searchStyling, ulStyling } from "./styling/PlaylistFilterStyling";
 
@@ -12,7 +14,7 @@ interface Props {
 }
 
 export const SearchInput = (({ onFilter }: Props) => {
-    const [playlists, setPlaylists] = useState<Playlist[]>([]);
+    const [playlists, setPlaylists] = useState<(Playlist | Folder)[]>([]);
     const [playlistContainer, setPlaylistContainer] = useState(document.querySelector("#spicetify-playlist-list"));
     const [searchTerm, setSearchTerm] = useState("");
 
@@ -64,7 +66,7 @@ export const SearchInput = (({ onFilter }: Props) => {
         await filterPlaylists(" ");
     };
 
-    const searchResults = useMemo(() => playlists.filter(playlist => {
+    const searchResults = useMemo(() => playlists.filter((playlist: (Playlist | Folder)) => {
         return playlist.name.toLowerCase().includes(searchTerm.toLowerCase());
     }), [searchTerm]);
 
@@ -84,7 +86,7 @@ export const SearchInput = (({ onFilter }: Props) => {
 
     return (
         <>
-            <div 
+            <div
                 id="playlist-filter-main-container"
                 className="main-navBar-navBarItem"
                 style={searchStyling}
@@ -133,25 +135,37 @@ export const SearchInput = (({ onFilter }: Props) => {
                     >
                         <hr
                             id="playlist-filter-divider"
-                            className="main-rootlist-rootlistDivider" 
+                            className="main-rootlist-rootlistDivider"
                         />
                         <div
                             id="playlist-filter-results-divider-gradient"
                             className="main-rootlist-rootlistDividerGradient"
                         />
                     </div>
-                    <ul 
+                    <ul
                         id="playlist-filter-results"
                         style={ulStyling}
                     >
                         {sortedSearchResults
-                            .map((playlist: any, i: number) => (
-                                <PlaylistItem
-                                    searchTerm={searchTerm}
-                                    playlist={playlist}
-                                    key={playlist.uri + i}
-                                />
-                            ))}
+                            .map((item: any, i: number) => {
+                                if (item.type === "folder") {
+                                    return (
+                                        <FolderItem
+                                            searchTerm={searchTerm}
+                                            folder={item}
+                                            key={item.uri + i}
+                                        />
+                                    );
+                                } else {
+                                    return (
+                                        <PlaylistItem
+                                            searchTerm={searchTerm}
+                                            playlist={item}
+                                            key={item.uri + i}
+                                        />
+                                    );
+                                }
+                            })}
                     </ul>
                 </>
             }
