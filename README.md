@@ -10,7 +10,7 @@ Adds keyboard shortcut F to focus on filter input field. It can be turned off th
 
 # Installation
 
-- Copy `./dist/playlist-filter.js` to `~/.spicetify/plugins`
+- Copy `./playlistFilter.js` to `~/.spicetify/plugins`
 - run:
 
 ```

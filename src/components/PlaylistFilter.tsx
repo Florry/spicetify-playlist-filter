@@ -65,12 +65,12 @@ export const SearchInput = (({ onFilter }: Props) => {
     };
 
     const searchResults = useMemo(() => playlists.filter(playlist => {
-        return playlist.name.toLowerCase().includes(searchTerm.toLowerCase());
+        return playlist.name?.toLowerCase().includes(searchTerm.toLowerCase());
     }), [searchTerm]);
 
     const sortedSearchResults = useMemo(() => searchResults.sort((a, b) => {
-        const aMatch = a.name.toLowerCase().indexOf(searchTerm.toLowerCase());
-        const bMatch = b.name.toLowerCase().indexOf(searchTerm.toLowerCase());
+        const aMatch = a.name?.toLowerCase().indexOf(searchTerm.toLowerCase());
+        const bMatch = b.name?.toLowerCase().indexOf(searchTerm.toLowerCase());
 
         // TODO: take into account the number of matches?
 
