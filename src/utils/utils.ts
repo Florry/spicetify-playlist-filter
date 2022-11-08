@@ -1,15 +1,15 @@
 import { Folder } from "../models/Folder";
+import { Placeholder } from "../models/Placeholder";
 import { Playlist } from "../models/Playlist";
 
 /** Flattens library into a list of playlists */
-export function flattenLibrary(library: (Folder | Playlist)[]): (Playlist | Folder)[] {
+export function flattenLibrary(library: (Folder | Playlist | Placeholder)[]): (Playlist | Folder)[] {
     const playlists: (Playlist | Folder)[] = [];
 
     for (const item of library) {
         if (item.type === "folder") {
             playlists.push(...flattenLibrary(item.items));
-            playlists.push(item);
-        } else {
+        } else if(item.type === "playlist"){
             playlists.push(item);
         }
     }

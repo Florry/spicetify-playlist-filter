@@ -69,7 +69,7 @@ if (x === "react-dom") return Spicetify.ReactDOM;
     for (const item of library) {
       if (item.type === "folder") {
         playlists.push(...flattenLibrary(item.items));
-      } else {
+      } else if (item.type === "playlist") {
         playlists.push(item);
       }
     }
@@ -209,11 +209,13 @@ if (x === "react-dom") return Spicetify.ReactDOM;
       await filterPlaylists(" ");
     };
     const searchResults = (0, import_react2.useMemo)(() => playlists.filter((playlist) => {
-      return playlist.name.toLowerCase().includes(searchTerm.toLowerCase());
+      var _a;
+      return (_a = playlist.name) == null ? void 0 : _a.toLowerCase().includes(searchTerm.toLowerCase());
     }), [searchTerm]);
     const sortedSearchResults = (0, import_react2.useMemo)(() => searchResults.sort((a, b) => {
-      const aMatch = a.name.toLowerCase().indexOf(searchTerm.toLowerCase());
-      const bMatch = b.name.toLowerCase().indexOf(searchTerm.toLowerCase());
+      var _a, _b;
+      const aMatch = (_a = a.name) == null ? void 0 : _a.toLowerCase().indexOf(searchTerm.toLowerCase());
+      const bMatch = (_b = b.name) == null ? void 0 : _b.toLowerCase().indexOf(searchTerm.toLowerCase());
       if (aMatch > bMatch)
         return 1;
       else if (aMatch < bMatch)
