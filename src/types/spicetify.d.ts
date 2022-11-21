@@ -85,16 +85,18 @@ declare namespace Spicetify {
         function addEventListener(type: "songchange", callback: (event?: Event & { data: PlayerState }) => void): void;
         function addEventListener(type: "onplaypause", callback: (event?: Event & { data: PlayerState }) => void): void;
         function addEventListener(type: "onprogress", callback: (event?: Event & { data: number }) => void): void;
-        function addEventListener(type: "appchange", callback: (event?: Event & { data: {
-            /**
-             * App href path
-             */
-            path: string;
-            /**
-             * App container
-             */
-             container: HTMLElement;
-        } }) => void): void;
+        function addEventListener(type: "appchange", callback: (event?: Event & {
+            data: {
+                /**
+                 * App href path
+                 */
+                path: string;
+                /**
+                 * App container
+                 */
+                container: HTMLElement;
+            }
+        }) => void): void;
         /**
          * Skip to previous track.
          */
@@ -416,7 +418,7 @@ declare namespace Spicetify {
             deregister(): void;
         }
     }
-    
+
     /**
      * Keyboard shortcut library
      * 
@@ -425,7 +427,7 @@ declare namespace Spicetify {
      * Spicetify.Keyboard is wrapper of this library to be compatible with legacy Spotify,
      * so new extension should use this library instead.
      */
-     function Mousetrap(element?: any): void;
+    function Mousetrap(element?: any): void;
 
     /**
      * Contains vast array of internal APIs.
@@ -1087,14 +1089,14 @@ declare namespace Spicetify {
          * @param id The token needed to join a social session.
          * @return The socialsession URI.
          */
-         static socialSessionURI(id: string): URI;
+        static socialSessionURI(id: string): URI;
 
-         /**
-         * Creates a new 'interruption' type URI.
-         *
-         * @param id The id of the interruption.
-         * @return The ad URI.
-         */
+        /**
+        * Creates a new 'interruption' type URI.
+        *
+        * @param id The id of the interruption.
+        * @return The ad URI.
+        */
         static interruptionURI(id: string): URI;
 
         static isAlbum(uri: any): boolean;
@@ -1249,10 +1251,10 @@ declare namespace Spicetify {
              * The menu UI to render inside of the context menu.
              */
             menu: Spicetify.ReactComponent.Menu |
-                Spicetify.ReactComponent.AlbumMenu |
-                Spicetify.ReactComponent.PodcastShowMenu |
-                Spicetify.ReactComponent.ArtistMenu |
-                Spicetify.ReactComponent.PlaylistMenu;
+            Spicetify.ReactComponent.AlbumMenu |
+            Spicetify.ReactComponent.PodcastShowMenu |
+            Spicetify.ReactComponent.ArtistMenu |
+            Spicetify.ReactComponent.PlaylistMenu;
             /**
              * A child of the context menu. Should be `<button>`, `<a>`,
              * a custom react component that forwards a ref to a `<button>` or `<a>`,
@@ -1351,7 +1353,83 @@ declare namespace Spicetify {
     /**
      * SVG icons 
      */
-    namespace SVGIcons {
-        const check: string;
+    enum SVGIcons {
+        "collaborative" = "",
+        "album" = "",
+        "artist" = "",
+        "block" = "",
+        "brightness" = "",
+        "car" = "",
+        "chart-down" = "",
+        "chart-up" = "",
+        "check" = "",
+        "check-alt-fill" = "",
+        "chevron-left" = "",
+        "chevron-right" = "",
+        "chromecast-disconnected" = "",
+        "clock" = "",
+        "computer" = "",
+        "copy" = "",
+        "download" = "",
+        "downloaded" = "",
+        "edit" = "",
+        "enhance" = "",
+        "exclamation-circle" = "",
+        "external-link" = "",
+        "facebook" = "",
+        "follow" = "",
+        "fullscreen" = "",
+        "gamepad" = "",
+        "grid-view" = "",
+        "heart" = "",
+        "heart-active" = "",
+        "instagram" = "",
+        "laptop" = "",
+        "library" = "",
+        "list-view" = "",
+        "location" = "",
+        "locked" = "",
+        "locked-active" = "",
+        "lyrics" = "",
+        "menu" = "",
+        "minimize" = "",
+        "minus" = "",
+        "more" = "",
+        "new-spotify-connect" = "",
+        "offline" = "",
+        "pause" = "",
+        "phone" = "",
+        "play" = "",
+        "playlist" = "",
+        "playlist-folder" = "",
+        "plus2px" = "",
+        "plus-alt" = "",
+        "podcasts" = "",
+        "projector" = "",
+        "queue" = "",
+        "repeat" = "",
+        "repeat-once" = "",
+        "search" = "",
+        "search-active" = "",
+        "shuffle" = "",
+        "skip-back" = "",
+        "skip-back15" = "",
+        "skip-forward" = "",
+        "skip-forward15" = "",
+        "soundbetter" = "",
+        "speaker" = "",
+        "spotify" = "",
+        "subtitles" = "",
+        "tablet" = "",
+        "ticket" = "",
+        "twitter" = "",
+        "visualizer" = "",
+        "voice" = "",
+        "volume" = "",
+        "volume-off" = "",
+        "volume-one-wave" = "",
+        "volume-two-wave" = "",
+        "watch" = "",
+        "x" = "",
     }
 }

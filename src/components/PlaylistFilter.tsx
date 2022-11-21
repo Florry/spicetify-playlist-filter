@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import getAllPlaylistData from "../clients/CosmosClient";
 import { SpotifyClient } from "../clients/SpotifyClient";
 import { getConfig } from "../config/Config";
-import { USE_KEYBOARD_SHORTCUTS } from "../constants/constants";
+import { TEMP_CONFIG_HIDE_UNRELATED_IN_FOLDERS, USE_KEYBOARD_SHORTCUTS } from "../constants/constants";
 import { Folder } from "../models/Folder";
 import { Playlist } from "../models/Playlist";
-import { flattenLibrary } from "../utils/utils";
-import FolderItem from "./FolderItem";
+import { flattenLibrary, folderItemsContainsSearchTerm } from "../utils/utils";
+import FolderItem, { folderIsDeadEnd, shouldRenderFolder } from "./FolderItem";
 import { PlaylistItem } from "./PlaylistItem";
 import { clearButtonStyling, searchInputStyling, searchStyling, ulStyling } from "./styling/PlaylistFilterStyling";
 
@@ -41,11 +42,14 @@ export const SearchInput = (({ onFilter }: Props) => {
         });
 
         // Refreshes playlists every 30 min
-        // TODO: find a better solution
+        // TODO: Make this configurable
         setInterval(() => getPlaylists(), 1000 * 30 * 60);
     }, []);
 
     const filterPlaylists = async (value: string) => {
+        // TODO:
+        getAllPlaylistData();
+
         if (!playlistContainer)
             await setPlaylistContainer(document.querySelector("#spicetify-playlist-list"));
 
@@ -71,8 +75,8 @@ export const SearchInput = (({ onFilter }: Props) => {
     }), [searchTerm]);
 
     const sortedSearchResults = useMemo(() => searchResults.sort((a, b) => {
-        const aMatch = a.name?.toLowerCase().indexOf(searchTerm.toLowerCase());
-        const bMatch = b.name?.toLowerCase().indexOf(searchTerm.toLowerCase());
+        const aMatch = a.name?.toLowerCase().indexOf(searchTerm.toLowerCase()) + a.name.length;
+        const bMatch = b.name?.toLowerCase().indexOf(searchTerm.toLowerCase()) + b.name.length;
 
         // TODO: take into account the number of matches?
 
@@ -149,13 +153,19 @@ export const SearchInput = (({ onFilter }: Props) => {
                         {sortedSearchResults
                             .map((item: any, i: number) => {
                                 if (item.type === "folder") {
-                                    return (
-                                        <FolderItem
-                                            searchTerm={searchTerm}
-                                            folder={item}
-                                            key={item.uri + i}
-                                        />
-                                    );
+                                    const containsSearchTerm = folderItemsContainsSearchTerm(item, searchTerm);
+                                    const isDeadEnd = folderIsDeadEnd(item, searchTerm);
+
+                                    if (shouldRenderFolder(item, searchTerm)) {
+                                        return (
+                                            <FolderItem
+                                                searchTerm={searchTerm}
+                                                folder={item}
+                                                key={item.uri + i}
+                                                deadEnd={TEMP_CONFIG_HIDE_UNRELATED_IN_FOLDERS ? isDeadEnd : false}
+                                            />
+                                        );
+                                    }
                                 } else {
                                     return (
                                         <PlaylistItem

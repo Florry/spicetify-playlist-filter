@@ -16,8 +16,7 @@ export const clearButtonStyling: React.CSSProperties = {
 
 export const searchInputStyling: React.CSSProperties = {
     width: "100%",
-    // backgroundColor: "transparent",
-    backgroundColor: "red", // TODO:
+    backgroundColor: "transparent",
     border: "none",
     padding: 10,
     height: 39,

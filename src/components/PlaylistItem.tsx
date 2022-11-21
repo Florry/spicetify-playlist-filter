@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Playlist } from "../models/Playlist";
+import { getPlaylistArtwork, imagesById } from "../clients/CosmosClient";
 import { getNameWithHighlightedSearchTerm } from "../utils/utils";
 import { listItemStyling, mainRootlistItemRootlistItemStyling } from "./styling/PlaylistItemStyling";
 
@@ -10,6 +11,8 @@ interface Props {
 }
 
 export const PlaylistItem = ({ playlist, searchTerm, indentation = -2 }: Props) => {
+    const [img, setImg] = useState(playlist.images.length > 0 ? playlist.images[0].url : "");
+
     const goToPlaylist = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
         e.preventDefault();
 
@@ -23,6 +26,10 @@ export const PlaylistItem = ({ playlist, searchTerm, indentation = -2 }: Props) 
     const startPlaybackFromPlaylist = () => {
         alert("TODO");
     };
+
+    useEffect(() => {
+        getPlaylistArtwork(playlist.uri).then((img) => setImg(img));
+    }, []);
 
     return (
         <li
@@ -39,6 +46,22 @@ export const PlaylistItem = ({ playlist, searchTerm, indentation = -2 }: Props) 
                 aria-expanded="false"
                 style={mainRootlistItemRootlistItemStyling}
             >
+                {img !== "" ? <img src={img}
+                    style={{
+                        width: "1.5em",
+                        height: "1.5em",
+                        borderRadius: 2,
+                        marginRight: 12,
+                    }}
+                /> : <svg
+                    height="1.5em"
+                    width="1.5em"
+                    fill="currentColor"
+                    style={{
+                        marginRight: 12,
+                        padding: 3,
+                    }}
+                    dangerouslySetInnerHTML={{ __html: Spicetify.SVGIcons["playlist"] }} />}
                 <a
                     aria-current="page"
                     className="standalone-ellipsis-one-line main-rootlist-rootlistItemLink playlist-filter-results-playlist-link"
