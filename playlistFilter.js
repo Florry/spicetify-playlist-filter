@@ -183,14 +183,14 @@ if (x === "react-dom") return Spicetify.ReactDOM;
     const searchInput = (0, import_react2.useRef)(null);
     (0, import_react2.useEffect)(() => {
       getPlaylists();
-      Spicetify.Keyboard.registerImportantShortcut("f", async () => {
-        if (getConfig(USE_KEYBOARD_SHORTCUTS)) {
+      if (getConfig(USE_KEYBOARD_SHORTCUTS)) {
+        Spicetify.Keyboard.registerImportantShortcut("f", async () => {
           setImmediate(() => {
             if (searchInput.current)
               searchInput.current.focus();
           });
-        }
-      });
+        });
+      }
       setInterval(() => getPlaylists(), 1e3 * 30 * 60);
     }, []);
     const filterPlaylists = async (value) => {
