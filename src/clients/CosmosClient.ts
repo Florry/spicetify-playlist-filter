@@ -2,7 +2,7 @@ const GET_PLAYLISTS_URL = "https://api.spotify.com/v1/me/playlists?limit=50";
 
 export const imagesById: any = {};
 
-export default async function getAllPlaylistData(url: string = GET_PLAYLISTS_URL): Promise<any> {
+export default async function getPlaylistData(url: string = GET_PLAYLISTS_URL): Promise<any> {
     const response = await Spicetify.CosmosAsync.get(url);
 
     if (response.items) {
@@ -12,7 +12,7 @@ export default async function getAllPlaylistData(url: string = GET_PLAYLISTS_URL
     }
 
     if (response.next) {
-        await getAllPlaylistData(response.next);
+        await getPlaylistData(response.next);
     }
 }
 
@@ -33,6 +33,6 @@ export async function getPlaylistArtwork(playlistId: string) {
                     }
                 }
             }
-        }, 50);
+        }, 100);
     });
 }

@@ -1,5 +1,5 @@
 import { Folder } from "../models/Folder";
-import { Item } from "../models/Item";
+import { ItemType } from "../models/Item";
 import { Placeholder } from "../models/Placeholder";
 import { Playlist } from "../models/Playlist";
 
@@ -8,10 +8,10 @@ export function flattenLibrary(library: (Folder | Playlist | Placeholder)[]): (P
     const playlists: (Playlist | Folder)[] = [];
 
     for (const item of library) {
-        if (item.type === Item.Folder) {
+        if (item.type === ItemType.Folder) {
             playlists.push(...flattenLibrary(item.items));
             playlists.push(sanatizeFolder(item));
-        } else if (item.type === Item.Playlist) {
+        } else if (item.type === ItemType.Playlist) {
             playlists.push(item);
         }
     }
@@ -22,7 +22,7 @@ export function flattenLibrary(library: (Folder | Playlist | Placeholder)[]): (P
 function sanatizeFolder(item: Folder) {
     return {
         ...item,
-        items: item.items.filter((item) => item.type !== Item.Placeholder)
+        items: item.items.filter((item) => item.type !== ItemType.Placeholder)
     };
 }
 
@@ -44,9 +44,9 @@ export function getNameWithHighlightedSearchTerm(name: string, searchTerm: strin
 
 export function searchInFolder(folder: Folder, searchTerm: string) {
     const filteredItems = folder.items.filter(item => {
-        if (item.type === Item.Folder) {
+        if (item.type === ItemType.Folder) {
             return searchInFolder(item, searchTerm).items.length > 0;
-        } else if (item.type === Item.Playlist) {
+        } else if (item.type === ItemType.Playlist) {
             return item.name.toLowerCase().includes(searchTerm.toLowerCase());
         }
     }) as Playlist[];
@@ -59,11 +59,11 @@ export function searchInFolder(folder: Folder, searchTerm: string) {
 
 export function folderItemsContainsSearchTerm(folder: Folder, searchTerm: string) {
     for (const item of folder.items) {
-        if (item.type === Item.Folder) {
+        if (item.type === ItemType.Folder) {
             if (folderItemsContainsSearchTerm(item, searchTerm)) {
                 return true;
             }
-        } else if (item.type === Item.Playlist) {
+        } else if (item.type === ItemType.Playlist) {
             if (item.name?.toLowerCase().includes(searchTerm.toLowerCase())) {
                 return true;
             }
@@ -71,4 +71,16 @@ export function folderItemsContainsSearchTerm(folder: Folder, searchTerm: string
     }
 
     return false;
+}
+
+export function sortItemsBySearchTerm(a: Playlist | Folder, b: Playlist | Folder, searchTerm: string) {
+    const aMatch = a.name?.toLowerCase().indexOf(searchTerm.toLowerCase());
+    const bMatch = b.name?.toLowerCase().indexOf(searchTerm.toLowerCase());
+
+    if (aMatch > bMatch)
+        return 1;
+    else if (aMatch < bMatch)
+        return -1;
+    else
+        return 0;
 }

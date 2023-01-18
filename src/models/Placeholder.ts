@@ -1,11 +1,7 @@
-import { Item } from "./Item";
+import { ItemType } from "./Item";
 
 export interface Placeholder {
-    type: Item.Placeholder;
-    id: string;
-    uid: string;
-    uri: string;
-    addedAt: string;
+    type: ItemType.Placeholder;
     isNotFound: boolean;
     isForbidden: boolean;
 }

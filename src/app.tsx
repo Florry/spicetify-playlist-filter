@@ -1,7 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import getAllPlaylistData from "./clients/CosmosClient";
-import { SearchInput } from "./components/PlaylistFilter";
+import { SearchInput } from "./components/SearchInput";
 import { registerSubMenues } from "./menues/subMenues";
 
 // TODO:

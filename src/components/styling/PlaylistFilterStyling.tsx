@@ -3,7 +3,8 @@ export const searchStyling: React.CSSProperties = {
     width: "100%",
     paddingLeft: 16,
     paddingRight: 16,
-    paddingTop: 7
+    paddingTop: 7,
+
 }
 
 export const clearButtonStyling: React.CSSProperties = {

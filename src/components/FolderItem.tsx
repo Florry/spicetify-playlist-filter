@@ -1,12 +1,11 @@
 import React, { useMemo } from "react";
-import { TEMP_CONFIG_HIDE_UNRELATED_IN_FOLDERS, TEMP_CONFIG_OPEN_FOLDERS_RECURSIVE, TEMP_CONFIG_SHOW_DEAD_ENDS } from "../constants/constants";
+import { getConfig, ConfigKey } from "../config/Config";
 import { Folder } from "../models/Folder";
-import { Item } from "../models/Item";
+import { ItemType } from "../models/Item";
 import { Playlist } from "../models/Playlist";
-import { flattenLibrary, folderItemsContainsSearchTerm, getNameWithHighlightedSearchTerm } from "../utils/utils";
+import { flattenLibrary, folderItemsContainsSearchTerm, getNameWithHighlightedSearchTerm, sortItemsBySearchTerm } from "../utils/utils";
 import { PlaylistItem } from "./PlaylistItem";
 
-// TODO: sort items within folders by how well they match the search term
 interface Props {
     searchTerm: string;
     folder: Folder;
@@ -22,11 +21,11 @@ const FolderItem = ({ searchTerm, folder, indentation = 0, deadEnd, recursiveOpe
     const goToFolder = (e: React.MouseEvent<any>) => {
         e.preventDefault();
 
-        // const href = Spicetify.URI.from(folder.uri)?.toURLPath(true)
+        const href = Spicetify.URI.from(folder.uri)?.toURLPath(true)
 
-        // if (href) {
-        // 	Spicetify.Platform.History.push(href);
-        // }
+        if (href) {
+            Spicetify.Platform.History.push(href);
+        }
     };
 
     const toggleFolderOpen = (e: React.MouseEvent<any>) => {
@@ -42,6 +41,14 @@ const FolderItem = ({ searchTerm, folder, indentation = 0, deadEnd, recursiveOpe
         }
     }
 
+    const sortedSearchResults = useMemo(() => {
+        const items = folder.items
+            .filter(item => item.type === ItemType.Folder || item.type === ItemType.Playlist) as (Playlist | Folder)[];
+
+        return items
+            .sort((a, b) => sortItemsBySearchTerm(a, b, searchTerm))
+    }, [searchTerm]);
+
     return (
         <>
             <li
@@ -54,7 +61,6 @@ const FolderItem = ({ searchTerm, folder, indentation = 0, deadEnd, recursiveOpe
                     cursor: deadEnd ? "default" : "pointer",
                 }}
                 aria-expanded="false"
-                onClick={goToFolder}
             >
                 <div
                     aria-hidden="true"
@@ -74,12 +80,10 @@ const FolderItem = ({ searchTerm, folder, indentation = 0, deadEnd, recursiveOpe
                 <a
                     className="standalone-ellipsis-one-line main-rootlist-rootlistItemLink"
                     draggable="false"
-                    // @ts-ignore
-                    tabindex="-1"
-                    href="/folder/e9c10fbbe64c2a96"
+                    onClick={goToFolder}
                 >
                     <span
-                        className="Type__TypeElement-goli3j-0 gJFKvJ main-rootlist-textWrapper"
+                        className="Type__TypeElement-sc-goli3j-0 gkqrGP main-rootlist-textWrapper"
                         dir="auto"
                     >
                         <span dangerouslySetInnerHTML={{ __html: getNameWithHighlightedSearchTerm(folder.name, searchTerm) }} />
@@ -87,18 +91,16 @@ const FolderItem = ({ searchTerm, folder, indentation = 0, deadEnd, recursiveOpe
                 </a>
 
                 <button
-                    // @ts-ignore
-                    tabindex="-1"
-                    className="Button-sc-1dqy6lx-0 dmmeCL main-rootlist-expandArrow main-rootlist-expandArrowActive"
+                    className="Button-sc-1dqy6lx-0 cWIysU main-rootlist-expandArrow"
                     aria-label="Expand folder"
                     onClick={toggleFolderOpen}
                     disabled={deadEnd}
                 >
-                    {deadEnd && TEMP_CONFIG_SHOW_DEAD_ENDS ? "Dead-end" : <span
+                    <span
                         aria-hidden="true"
-                        className="IconWrapper__Wrapper-sc-16usrgb-0 bxwPwV"
+                        className="IconWrapper__Wrapper-sc-16usrgb-0 eJHlti"
                         style={{
-                            transform: folderIsOpen ? "rotate(0deg)" : "rotate(-90deg)",
+                            transform: folderIsOpen ? "rotate(90deg)" : "rotate(0deg)",
                         }}
                     >
 
@@ -106,49 +108,49 @@ const FolderItem = ({ searchTerm, folder, indentation = 0, deadEnd, recursiveOpe
                             role="img"
                             height="16"
                             width="16"
+                            aria-hidden="true"
                             viewBox="0 0 16 16"
-                            className="Svg-ytk21e-0 jAKAlG"
-                        >
-                            <path
-                                d="M14 6l-6 6-6-6h12z"
-                            />
+                            className="Svg-sc-ytk21e-0 uPxdw">
+                            <path d="M14 6l-6 6-6-6h12z">
+                            </path>
                         </svg>
-                    </span>}
+                    </span>
 
                 </button>
             </li>
 
             {
                 folderIsOpen &&
-                folder.items.map((item, i) => {
-                    if (item.type === Item.Folder) {
-                        if (shouldRenderFolder(item, searchTerm)) {
-                            const isDeadEnd = folderIsDeadEnd(item, searchTerm);
+                sortedSearchResults
+                    .map((item, i) => {
+                        if (item.type === ItemType.Folder) {
+                            if (shouldRenderFolder(item, searchTerm)) {
+                                const isDeadEnd = folderIsDeadEnd(item, searchTerm);
 
-                            return (
-                                <FolderItem
-                                    searchTerm={searchTerm}
-                                    folder={item}
-                                    key={item.uri + i}
-                                    indentation={indentation + 1}
-                                    deadEnd={TEMP_CONFIG_HIDE_UNRELATED_IN_FOLDERS ? isDeadEnd : false}
-                                    recursiveOpen={TEMP_CONFIG_OPEN_FOLDERS_RECURSIVE ? folderContainsImmediateResult(folder, searchTerm) : false}
-                                />
-                            );
+                                return (
+                                    <FolderItem
+                                        searchTerm={searchTerm}
+                                        folder={item}
+                                        key={item.uri + i}
+                                        indentation={indentation + 1}
+                                        deadEnd={getConfig(ConfigKey.HideUnrelatedInFolders) ? isDeadEnd : false}
+                                        recursiveOpen={getConfig(ConfigKey.OpenFoldersRecursively) ? folderContainsImmediateResult(folder, searchTerm) : false}
+                                    />
+                                );
+                            }
+                        } else if (item.type === ItemType.Playlist) {
+                            if (shouldRenderPlaylist(item, searchTerm)) {
+                                return (
+                                    <PlaylistItem
+                                        searchTerm={searchTerm}
+                                        playlist={item}
+                                        key={item.uri + i}
+                                        indentation={indentation - 0.5}
+                                    />
+                                )
+                            }
                         }
-                    } else if (item.type === Item.Playlist) {
-                        if (shouldRenderPlaylist(item, searchTerm)) {
-                            return (
-                                <PlaylistItem
-                                    searchTerm={searchTerm}
-                                    playlist={item}
-                                    key={item.uri + i}
-                                    indentation={indentation - 0.5}
-                                />
-                            )
-                        }
-                    }
-                })
+                    })
             }
 
         </>
@@ -158,7 +160,7 @@ const FolderItem = ({ searchTerm, folder, indentation = 0, deadEnd, recursiveOpe
 export default FolderItem;
 
 export function shouldRenderFolder(folder: Folder, searchTerm: string) {
-    if (TEMP_CONFIG_HIDE_UNRELATED_IN_FOLDERS) {
+    if (getConfig(ConfigKey.HideUnrelatedInFolders)) {
         const containsSearchTerm = folderItemsContainsSearchTerm(folder, searchTerm);
 
         return folder.name?.toLowerCase().includes(searchTerm.toLowerCase()) || containsSearchTerm;
@@ -168,7 +170,7 @@ export function shouldRenderFolder(folder: Folder, searchTerm: string) {
 }
 
 function shouldRenderPlaylist(playlist: Playlist, searchTerm: string) {
-    if (TEMP_CONFIG_HIDE_UNRELATED_IN_FOLDERS) {
+    if (getConfig(ConfigKey.HideUnrelatedInFolders)) {
         return playlist.name?.toLowerCase().includes(searchTerm.toLowerCase());
     } else {
         return true;
@@ -192,15 +194,15 @@ function folderContainsPlaylist(folder: Folder, searchTerm: string) {
     const flattenedLibrary = flattenLibrary([folder]);
 
     return flattenedLibrary.find(item => {
-        return item.type === Item.Playlist && item.name?.toLowerCase().includes(searchTerm.toLowerCase());
+        return item.type === ItemType.Playlist && item.name?.toLowerCase().includes(searchTerm.toLowerCase());
     });
 }
 
 function folderContainsImmediateResult(folder: Folder, searchTerm: string) {
     return !folder.items.find(item => {
-        if (item.type === Item.Folder) {
+        if (item.type === ItemType.Folder) {
             return item.name?.toLowerCase().includes(searchTerm.toLowerCase());
-        } else if (item.type === Item.Playlist) {
+        } else if (item.type === ItemType.Playlist) {
             return item.name?.toLowerCase().includes(searchTerm.toLowerCase());
         }
     });

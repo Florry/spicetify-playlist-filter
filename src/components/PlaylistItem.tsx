@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
+import { getPlaylistArtwork } from "../clients/CosmosClient";
+import { getConfig } from "../config/Config";
+import { ConfigKey } from "../config/Config";
 import { Playlist } from "../models/Playlist";
-import { getPlaylistArtwork, imagesById } from "../clients/CosmosClient";
 import { getNameWithHighlightedSearchTerm } from "../utils/utils";
 import { listItemStyling, mainRootlistItemRootlistItemStyling } from "./styling/PlaylistItemStyling";
 
@@ -33,20 +35,22 @@ export const PlaylistItem = ({ playlist, searchTerm, indentation = -2 }: Props) 
 
     return (
         <li
-            className="GlueDropTarget GlueDropTarget--albums GlueDropTarget--tracks GlueDropTarget--local-tracks GlueDropTarget--episodes GlueDropTarget--playlists GlueDropTarget--folders playlist-filter-results-list-item"
+            role="listitem" class="main-rootlist-rootlistItem playlist-item" draggable="true"
             style={{
                 ...listItemStyling,
                 //  @ts-ignore
                 "--indentation": indentation
             }}
+            onDrop={(e) => console.log(e)}
         >
+            <div aria-hidden="true" className="main-rootlist-rootlistItemOverlay"></div>
             <div
-                className="main-rootlist-rootlistItem playlist-item playlist-filter-results-playlist-item"
-                draggable="true"
-                aria-expanded="false"
+                aria-current="page"
+                className="standalone-ellipsis-one-line main-rootlist-rootlistItemLink main-rootlist-rootlistItemLinkActive"
+                draggable="false"
                 style={mainRootlistItemRootlistItemStyling}
             >
-                {img !== "" ? <img src={img}
+                {getConfig(ConfigKey.UsePlaylistCovers) ? img !== "" ? <img src={img}
                     style={{
                         width: "1.5em",
                         height: "1.5em",
@@ -61,7 +65,7 @@ export const PlaylistItem = ({ playlist, searchTerm, indentation = -2 }: Props) 
                         marginRight: 12,
                         padding: 3,
                     }}
-                    dangerouslySetInnerHTML={{ __html: Spicetify.SVGIcons["playlist"] }} />}
+                    dangerouslySetInnerHTML={{ __html: Spicetify.SVGIcons["playlist"] }} /> : <></>}
                 <a
                     aria-current="page"
                     className="standalone-ellipsis-one-line main-rootlist-rootlistItemLink playlist-filter-results-playlist-link"
@@ -71,7 +75,7 @@ export const PlaylistItem = ({ playlist, searchTerm, indentation = -2 }: Props) 
                     onDoubleClick={startPlaybackFromPlaylist}
                 >
                     <span
-                        className="Type__TypeElement-goli3j-0 gJFKvJ main-rootlist-textWrapper playlist-filter-results-playlist-name"
+                        className="Type__TypeElement-sc-goli3j-0 gkqrGP main-rootlist-textWrapper"
                         dir="auto"
                     >
                         <span dangerouslySetInnerHTML={{ __html: getNameWithHighlightedSearchTerm(playlist.name, searchTerm) }} />

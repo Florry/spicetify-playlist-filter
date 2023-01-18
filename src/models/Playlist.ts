@@ -1,14 +1,10 @@
 import { Image } from "./Image";
 import { Owner } from "./Owner";
 import { Collaborator } from "./Collaborator";
-import { Item } from "./Item";
+import { Item, ItemType } from "./Item";
 
-export interface Playlist {
-    id: string;
-    uid: string;
-    addedAt: string;
-    type: Item.Playlist;
-    uri: string;
+export interface Playlist extends Item {
+    type: ItemType.Playlist;
     name: string;
     description: string;
     images: Image[];

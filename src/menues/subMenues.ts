@@ -1,14 +1,15 @@
-import { getConfig, toggleConfig } from "../config/Config";
-import { USE_KEYBOARD_SHORTCUTS } from "../constants/constants";
+import { openConfigModal } from "../components/config/ConfigModal";
+import { getConfig, toggleConfig, ConfigKey } from "../config/Config";
 
 export function registerSubMenues() {
     const toggleKeyboardShortcuts = new Spicetify.Menu.Item(
         "Use keyboard shortcut (f)",
-        getConfig(USE_KEYBOARD_SHORTCUTS),
+        getConfig(ConfigKey.UseKeyboardShortcuts),
         (menuItem) => {
-            toggleConfig(USE_KEYBOARD_SHORTCUTS);
-            menuItem.isEnabled = getConfig(USE_KEYBOARD_SHORTCUTS);
+            toggleConfig(ConfigKey.UseKeyboardShortcuts);
+            menuItem.isEnabled = getConfig(ConfigKey.UseKeyboardShortcuts);
         });
 
-    new Spicetify.Menu.SubMenu("Playlist filter", [toggleKeyboardShortcuts]).register();
+    // new Spicetify.Menu.SubMenu("Playlist filter", [toggleKeyboardShortcuts]).register();
+    new Spicetify.Menu.Item("Playlist filter", false, openConfigModal).register();
 }

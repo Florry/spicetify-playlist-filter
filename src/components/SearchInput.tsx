@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import getAllPlaylistData from "../clients/CosmosClient";
+import getPlaylistData from "../clients/CosmosClient";
 import { SpotifyClient } from "../clients/SpotifyClient";
-import { getConfig } from "../config/Config";
-import { TEMP_CONFIG_HIDE_UNRELATED_IN_FOLDERS, USE_KEYBOARD_SHORTCUTS } from "../constants/constants";
+import { getConfig, ConfigKey, ModifierKey } from "../config/Config";
 import { Folder } from "../models/Folder";
 import { Playlist } from "../models/Playlist";
-import { flattenLibrary, folderItemsContainsSearchTerm } from "../utils/utils";
+import { flattenLibrary, sortItemsBySearchTerm } from "../utils/utils";
+import { openConfigModal } from "./config/ConfigModal";
 import FolderItem, { folderIsDeadEnd, shouldRenderFolder } from "./FolderItem";
 import { PlaylistItem } from "./PlaylistItem";
 import { clearButtonStyling, searchInputStyling, searchStyling, ulStyling } from "./styling/PlaylistFilterStyling";
@@ -30,24 +30,49 @@ export const SearchInput = (({ onFilter }: Props) => {
 
     useEffect(() => {
         getPlaylists();
-        if (getConfig(USE_KEYBOARD_SHORTCUTS)) {
-            Spicetify.Keyboard.registerImportantShortcut("f", async () => {
-                /* Without setImmediate here, the value of searchInput is set to f for some reason */
-                setImmediate(() => {
-                    if (searchInput.current)
-                        searchInput.current.focus();
-                });
+        getPlaylistData();
+
+        if (getConfig(ConfigKey.UseKeyboardShortcuts)) {
+            const modifierKey = getConfig(ConfigKey.KeyboardShortcutModifierKey);
+
+            Spicetify.Keyboard.registerImportantShortcut(getConfig(ConfigKey.KeyboardShortcutKey), async (e: KeyboardEvent) => {
+                // TODO: Make this work with modifier keys
+                let heldDownModifierKey = true;
+
+                if (modifierKey !== "") {
+
+                    if (modifierKey === ModifierKey.Alt) {
+                        heldDownModifierKey = e.altKey;
+                    } else if (modifierKey === ModifierKey.Ctrl) {
+                        heldDownModifierKey = e.ctrlKey;
+                    } else if (modifierKey === ModifierKey.Meta) {
+                        heldDownModifierKey = e.metaKey;
+                    } else if (modifierKey === ModifierKey.Shift) {
+                        heldDownModifierKey = e.shiftKey;
+                    }
+                }
+
+                if (modifierKey === "" || heldDownModifierKey) {
+                    /* Without setImmediate here, the value of searchInput is set to f for some reason */
+                    setImmediate(() => {
+                        if (searchInput.current)
+                            searchInput.current.focus();
+                    });
+                }
             });
         }
 
-        // Refreshes playlists every 30 min
-        // TODO: Make this configurable
-        setInterval(() => getPlaylists(), 1000 * 30 * 60);
+        const getPlaylistsInterval = setInterval(() => {
+            getPlaylistData();
+            getPlaylists()
+        }, getConfig(ConfigKey.PlaylistListRefreshInterval));
+
+        return () => clearInterval(getPlaylistsInterval);
     }, []);
 
     const filterPlaylists = async (value: string) => {
         // TODO:
-        getAllPlaylistData();
+        // getPlaylistData();
 
         if (!playlistContainer)
             await setPlaylistContainer(document.querySelector("#spicetify-playlist-list"));
@@ -66,26 +91,14 @@ export const SearchInput = (({ onFilter }: Props) => {
     }
 
     const clearFilter = async () => {
-        await filterPlaylists(" ");
+        await filterPlaylists("");
     };
 
     const searchResults = useMemo(() => playlists.filter((playlist: (Playlist | Folder)) => {
         return playlist.name?.toLowerCase().includes(searchTerm.toLowerCase());
     }), [searchTerm]);
 
-    const sortedSearchResults = useMemo(() => searchResults.sort((a, b) => {
-        const aMatch = a.name?.toLowerCase().indexOf(searchTerm.toLowerCase()) + a.name.length;
-        const bMatch = b.name?.toLowerCase().indexOf(searchTerm.toLowerCase()) + b.name.length;
-
-        // TODO: take into account the number of matches?
-
-        if (aMatch > bMatch)
-            return 1;
-        else if (aMatch < bMatch)
-            return -1;
-        else
-            return 0;
-    }), [searchResults]);
+    const sortedSearchResults = useMemo(() => searchResults.sort((a, b) => sortItemsBySearchTerm(a, b, searchTerm)), [searchTerm]);
 
     return (
         <>
@@ -152,16 +165,15 @@ export const SearchInput = (({ onFilter }: Props) => {
                         {sortedSearchResults
                             .map((item: any, i: number) => {
                                 if (item.type === "folder") {
-                                    const containsSearchTerm = folderItemsContainsSearchTerm(item, searchTerm);
                                     const isDeadEnd = folderIsDeadEnd(item, searchTerm);
 
-                                    if (shouldRenderFolder(item, searchTerm)) {
+                                    if (getConfig(ConfigKey.IncludeFoldersInResult) && shouldRenderFolder(item, searchTerm)) {
                                         return (
                                             <FolderItem
                                                 searchTerm={searchTerm}
                                                 folder={item}
                                                 key={item.uri + i}
-                                                deadEnd={TEMP_CONFIG_HIDE_UNRELATED_IN_FOLDERS ? isDeadEnd : false}
+                                                deadEnd={getConfig(ConfigKey.HideUnrelatedInFolders) ? isDeadEnd : false}
                                             />
                                         );
                                     }
@@ -181,3 +193,5 @@ export const SearchInput = (({ onFilter }: Props) => {
         </>
     );
 });
+
+
