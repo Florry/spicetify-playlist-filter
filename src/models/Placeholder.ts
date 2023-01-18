@@ -1,6 +1,6 @@
-import { ItemType } from "./Item";
+import { Item, ItemType } from "./Item";
 
-export interface Placeholder {
+export interface Placeholder extends Item {
     type: ItemType.Placeholder;
     isNotFound: boolean;
     isForbidden: boolean;
