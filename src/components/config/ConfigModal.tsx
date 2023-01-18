@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { ConfigItem, configItemsNew, ConfigType, defaultConfig, getConfig, InputOptions, resetConfigToDefault, SelectOptions, setConfig } from "../../config/Config";
+import { ConfigItem, configItems, ConfigType, defaultConfig, getConfig, InputOptions, resetConfigToDefault, SelectOptions, setConfig } from "../../config/Config";
 import Checkbox from "./Checkbox";
 import Input from "./Input";
 import Select from "./Select";
@@ -82,14 +82,14 @@ const ConfigModal = () => {
                         <main>
                             <div className="x-settings-container">
                                 {
-                                    configItemsNew
-                                        .map(configItem => (
+                                    configItems
+                                        .map(section => (
                                             <div
                                                 className="x-settings-section"
                                                 style={{ marginTop: 20 }}
                                             >
                                                 {
-                                                    configItem
+                                                    section
                                                         .filter(config => !config.subKey || getConfig(config.subKey))
                                                         .map(configItem => (
                                                             configItem.type === ConfigType.Title ?

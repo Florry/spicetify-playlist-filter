@@ -92,7 +92,7 @@ export type InputOptions = {
     maxLength?: number;
 }
 
-export const configItemsNew: ConfigItem[][] = [
+export const configItems: ConfigItem[][] = [
     [
         {
             key: "" as ConfigKey,
@@ -175,68 +175,4 @@ export const configItemsNew: ConfigItem[][] = [
             description: "The interval in milliseconds to refresh the playlist list used when filtering playlists (ms)",
         }
     ]
-];
-
-export const configItems: ConfigItem[] = [
-    {
-        key: ConfigKey.UseKeyboardShortcuts,
-        type: ConfigType.Checkbox,
-        label: "Use keyboard shortcut",
-        description: "Registers a keyboard shortcut to focus the filter input field",
-    },
-    {
-        key: ConfigKey.KeyboardShortcutKey,
-        type: ConfigType.Input,
-        label: "Keyboard shortcut key",
-        description: "The key to use for the keyboard shortcut",
-        subKey: ConfigKey.UseKeyboardShortcuts,
-        options: {
-            maxLength: 1
-        }
-    },
-    {
-        key: ConfigKey.KeyboardShortcutModifierKey,
-        type: ConfigType.Select,
-        label: "Keyboard shortcut modifier key",
-        subKey: ConfigKey.UseKeyboardShortcuts,
-        options: [
-            { label: "None", value: "" },
-            { label: "Ctrl", value: ModifierKey.Ctrl },
-            { label: "Shift", value: ModifierKey.Shift },
-            { label: "Alt", value: ModifierKey.Alt },
-            { label: "Cmd", value: ModifierKey.Meta }
-        ]
-    },
-    {
-        key: ConfigKey.IncludeFoldersInResult,
-        type: ConfigType.Checkbox,
-        label: "Include folders in result",
-        description: "Includes folders in the result list",
-    },
-    {
-        key: ConfigKey.OpenFoldersRecursively,
-        type: ConfigType.Checkbox,
-        label: "Open folders recursively",
-        description: "Opens all folders recursively when clicking on a folder",
-        subKey: ConfigKey.IncludeFoldersInResult,
-    },
-    {
-        key: ConfigKey.HideUnrelatedInFolders,
-        type: ConfigType.Checkbox,
-        label: "Hide unrelated playlists in folders",
-        description: "Hides playlists that are not in the current folder",
-        subKey: ConfigKey.IncludeFoldersInResult,
-    },
-    {
-        key: ConfigKey.UsePlaylistCovers,
-        type: ConfigType.Checkbox,
-        label: "Use album covers",
-        description: "Adds playlist cover images to the left of the playlist name",
-    },
-    {
-        key: ConfigKey.PlaylistListRefreshInterval,
-        type: ConfigType.Input,
-        label: "Playlist list refresh interval",
-        description: "The interval in milliseconds to refresh the playlist list",
-    },
 ];

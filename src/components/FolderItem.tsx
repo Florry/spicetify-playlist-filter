@@ -17,7 +17,6 @@ interface Props {
 const FolderItem = ({ searchTerm, folder, indentation = 0, deadEnd, recursiveOpen }: Props) => {
     const [folderIsOpen, setFolderIsOpen] = React.useState(recursiveOpen);
 
-    // TODO:
     const goToFolder = (e: React.MouseEvent<any>) => {
         e.preventDefault();
 
