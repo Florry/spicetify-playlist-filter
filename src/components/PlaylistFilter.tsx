@@ -30,16 +30,15 @@ export const SearchInput = (({ onFilter }: Props) => {
 
     useEffect(() => {
         getPlaylists();
-
-        Spicetify.Keyboard.registerImportantShortcut("f", async () => {
-            if (getConfig(USE_KEYBOARD_SHORTCUTS)) {
+        if (getConfig(USE_KEYBOARD_SHORTCUTS)) {
+            Spicetify.Keyboard.registerImportantShortcut("f", async () => {
                 /* Without setImmediate here, the value of searchInput is set to f for some reason */
                 setImmediate(() => {
                     if (searchInput.current)
                         searchInput.current.focus();
                 });
-            }
-        });
+            });
+        }
 
         // Refreshes playlists every 30 min
         // TODO: Make this configurable
