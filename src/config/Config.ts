@@ -20,9 +20,13 @@ export const defaultConfig = {
     [ConfigKey.PlaylistListRefreshInterval]: 1000 * 30 * 60
 };
 
-export const config: Record<ConfigKey, any> = {
+const config: Record<ConfigKey, any> = {
     ...defaultConfig
 };
+
+export function getConfigObject() {
+    return { ...config };
+}
 
 export function resetConfigToDefault() {
     for (const key in defaultConfig) {
@@ -84,6 +88,9 @@ export type ConfigItem = {
     description?: string;
     subKey?: ConfigKey;
     options?: SelectOptions | InputOptions;
+    /** Returns whether to reload spotify after closing the config modal */
+    onValueChange?: (value: any) => boolean | void;
+    link?: string;
 };
 
 export type SelectOptions = { label: string; value: string }[];
@@ -92,11 +99,16 @@ export type InputOptions = {
     maxLength?: number;
 }
 
+function onKeyboardConfigChange() {
+    return true;
+}
+
 export const configItems: ConfigItem[][] = [
     [
         {
             key: "" as ConfigKey,
             label: "Keyboard shortcut",
+            description: "Note: Spotify will need to reload upon closing the modal when changing the keyboard shortcut configs",
             type: ConfigType.Title,
         },
         {
@@ -104,6 +116,7 @@ export const configItems: ConfigItem[][] = [
             type: ConfigType.Checkbox,
             label: "Use keyboard shortcut",
             description: "Registers a keyboard shortcut to focus the filter input field",
+            onValueChange: onKeyboardConfigChange,
         },
         {
             key: ConfigKey.KeyboardShortcutKey,
@@ -113,7 +126,8 @@ export const configItems: ConfigItem[][] = [
             subKey: ConfigKey.UseKeyboardShortcuts,
             options: {
                 maxLength: 1
-            }
+            },
+            onValueChange: onKeyboardConfigChange,
         },
         {
             key: ConfigKey.KeyboardShortcutModifierKey,
@@ -126,7 +140,8 @@ export const configItems: ConfigItem[][] = [
                 { label: "Shift", value: "shift" },
                 { label: "Alt", value: "alt" },
                 { label: "Cmd", value: "meta" }
-            ]
+            ],
+            onValueChange: onKeyboardConfigChange,
         },
     ],
     [
@@ -139,20 +154,20 @@ export const configItems: ConfigItem[][] = [
             key: ConfigKey.IncludeFoldersInResult,
             type: ConfigType.Checkbox,
             label: "Include folders in result",
-            description: "Includes folders in the filter result",
+            description: "Includes folders that can be navigated in the filter result",
         },
         {
             key: ConfigKey.OpenFoldersRecursively,
             type: ConfigType.Checkbox,
             label: "Open folders recursively",
-            description: "Opens folders recursively down to any filter result when clicking on a folder in the filter result. E.g. if a folder contains a folder that doesn't match the input but it contains a playlist that does, the folder will be opened.",
+            description: "Opens folders recursively down to any playlist that matches the filter input when clicking on a folder in the filter result. E.g. if a folder contains a folder that doesn't match the input but it contains a playlist that does, the folder will be opened",
             subKey: ConfigKey.IncludeFoldersInResult,
         },
         {
             key: ConfigKey.HideUnrelatedInFolders,
             type: ConfigType.Checkbox,
             label: "Hide unrelated playlists in folders",
-            description: "Hides folders in folders that don't match the filter input.",
+            description: "Hides playlists and folders in folders that don't match the filter input",
             subKey: ConfigKey.IncludeFoldersInResult,
         }
     ],
@@ -170,9 +185,21 @@ export const configItems: ConfigItem[][] = [
         },
         {
             key: ConfigKey.PlaylistListRefreshInterval,
-            type: ConfigType.Input,
+            type: ConfigType.Select,
             label: "Playlist list refresh interval",
-            description: "The interval in milliseconds to refresh the playlist list used when filtering playlists (ms)",
-        }
+            description: "The interval in milliseconds to refresh the playlist list used when filtering playlists. It will also fetch once when spotify is launched so unless you create or add a lot of playlist this can be a relatively high number",
+            options: [
+                { label: "1 minute", value: "60000" },
+                { label: "5 minutes", value: "300000" },
+                { label: "10 minutes", value: "600000" },
+                { label: "30 minutes", value: "1800000" },
+                { label: "1 hour", value: "3600000" },
+                { label: "2 hours", value: "7200000" },
+                { label: "6 hours", value: "21600000" },
+                { label: "12 hours", value: "43200000" },
+                { label: "1 day", value: "86400000" },
+            ],
+        },
+
     ]
 ];

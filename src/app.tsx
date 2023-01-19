@@ -4,12 +4,7 @@ import { SearchInput } from "./components/SearchInput";
 import { registerSubMenues } from "./menues/subMenues";
 
 // TODO:
-// - Double click to play playlist / folder
-// - Add "now playing" icon next to currently playing playlist
-// - Remember open / closed state of folders (maybe in localStorage, forget after a while)
 // - Add option for sorting playlists / folders inside folders
-// - Add option for hiding playlists / folders inside folders not related to filter term
-// - Add option for keeping opened folders open when filtering
 
 async function main() {
     const sidebarItem = await waitForSidebar();

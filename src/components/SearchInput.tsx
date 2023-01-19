@@ -1,14 +1,25 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import getPlaylistData from "../clients/CosmosClient";
 import { SpotifyClient } from "../clients/SpotifyClient";
-import { getConfig, ConfigKey, ModifierKey } from "../config/Config";
+import { ConfigKey, getConfig } from "../config/Config";
 import { Folder } from "../models/Folder";
 import { Playlist } from "../models/Playlist";
-import { flattenLibrary, sortItemsBySearchTerm } from "../utils/utils";
-import { openConfigModal } from "./config/ConfigModal";
+import { flattenLibrary, getConfiguredKeyboardKeys, sortItemsBySearchTerm } from "../utils/utils";
 import FolderItem, { folderIsDeadEnd, shouldRenderFolder } from "./FolderItem";
 import { PlaylistItem } from "./PlaylistItem";
 import { clearButtonStyling, searchInputStyling, searchStyling, ulStyling } from "./styling/PlaylistFilterStyling";
+
+let searchInputElement: HTMLInputElement | null = null;
+
+export function registerKeyboardShortcut() {
+    Spicetify.Keyboard.registerImportantShortcut(getConfiguredKeyboardKeys(), async () => {
+        /* Without setImmediate here, the value of searchInput is set to f for some reason */
+        setImmediate(() => {
+            if (searchInputElement)
+                searchInputElement.focus();
+        });
+    });
+}
 
 interface Props {
     onFilter: (searchCleared: boolean) => void;
@@ -30,52 +41,34 @@ export const SearchInput = (({ onFilter }: Props) => {
 
     useEffect(() => {
         getPlaylists();
-        getPlaylistData();
+
+        if (getConfig(ConfigKey.UsePlaylistCovers)) {
+            getPlaylistData();
+        }
 
         if (getConfig(ConfigKey.UseKeyboardShortcuts)) {
-            const modifierKey = getConfig(ConfigKey.KeyboardShortcutModifierKey);
-
-            Spicetify.Keyboard.registerImportantShortcut(getConfig(ConfigKey.KeyboardShortcutKey), async (e: KeyboardEvent) => {
-                // TODO: Make this work with modifier keys
-                let heldDownModifierKey = true;
-
-                if (modifierKey !== "") {
-
-                    if (modifierKey === ModifierKey.Alt) {
-                        heldDownModifierKey = e.altKey;
-                    } else if (modifierKey === ModifierKey.Ctrl) {
-                        heldDownModifierKey = e.ctrlKey;
-                    } else if (modifierKey === ModifierKey.Meta) {
-                        heldDownModifierKey = e.metaKey;
-                    } else if (modifierKey === ModifierKey.Shift) {
-                        heldDownModifierKey = e.shiftKey;
-                    }
-                }
-
-                if (modifierKey === "" || heldDownModifierKey) {
-                    /* Without setImmediate here, the value of searchInput is set to f for some reason */
-                    setImmediate(() => {
-                        if (searchInput.current)
-                            searchInput.current.focus();
-                    });
-                }
-            });
+            /* A bit of a hack to be able to register/deregister shortcuts from config, but it will do */
+            searchInputElement = searchInput.current;
+            registerKeyboardShortcut();
         }
 
         const getPlaylistsInterval = setInterval(() => {
             getPlaylistData();
-            getPlaylists()
+
+            if (!getConfig(ConfigKey.UsePlaylistCovers)) {
+                getPlaylistData();
+            }
         }, getConfig(ConfigKey.PlaylistListRefreshInterval));
 
-        return () => clearInterval(getPlaylistsInterval);
+        return () => {
+            clearInterval(getPlaylistsInterval);
+        }
     }, []);
 
     const filterPlaylists = async (value: string) => {
-        // TODO:
-        // getPlaylistData();
-
-        if (!playlistContainer)
+        if (!playlistContainer) {
             await setPlaylistContainer(document.querySelector("#spicetify-playlist-list"));
+        }
 
         await setSearchTerm(value === " " ? "" : value);
 

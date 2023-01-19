@@ -1,3 +1,4 @@
+import { getConfig, ConfigKey, ModifierKey } from "../config/Config";
 import { Folder } from "../models/Folder";
 import { ItemType } from "../models/Item";
 import { Placeholder } from "../models/Placeholder";
@@ -74,8 +75,26 @@ export function folderItemsContainsSearchTerm(folder: Folder, searchTerm: string
 }
 
 export function sortItemsBySearchTerm(a: Playlist | Folder, b: Playlist | Folder, searchTerm: string) {
-    const aMatch = a.name?.toLowerCase().indexOf(searchTerm.toLowerCase());
-    const bMatch = b.name?.toLowerCase().indexOf(searchTerm.toLowerCase());
+    let aMatch = a.name?.toLowerCase().indexOf(searchTerm.toLowerCase());
+    let bMatch = b.name?.toLowerCase().indexOf(searchTerm.toLowerCase());
+
+    if (aMatch === -1 && bMatch === -1) {
+        if (a.type === ItemType.Folder && folderItemsContainsSearchTerm(a as Folder, searchTerm)) {
+            return -1;
+        } else if (b.type === ItemType.Folder && folderItemsContainsSearchTerm(b as Folder, searchTerm)) {
+            return 1;
+        } else {
+            return sortByName();
+        }
+    }
+
+    /* If no match, put at the end */
+    aMatch = aMatch === -1 ? 99999 : aMatch;
+    bMatch = bMatch === -1 ? 99999 : bMatch;
+
+    if (aMatch === bMatch) {
+        return sortByName();
+    }
 
     if (aMatch > bMatch)
         return 1;
@@ -83,4 +102,20 @@ export function sortItemsBySearchTerm(a: Playlist | Folder, b: Playlist | Folder
         return -1;
     else
         return 0;
+
+    function sortByName() {
+        return a.name?.toLowerCase().localeCompare(b.name?.toLowerCase() || "") || 0;
+    }
+}
+
+export function getConfiguredKeyboardKeys(): Spicetify.Keyboard.KeysDefine {
+    const modifierKey = getConfig(ConfigKey.KeyboardShortcutModifierKey);
+
+    return {
+        key: getConfig(ConfigKey.KeyboardShortcutKey),
+        ctrl: modifierKey === ModifierKey.Ctrl,
+        alt: modifierKey === ModifierKey.Alt,
+        meta: modifierKey === ModifierKey.Meta,
+        shift: modifierKey === ModifierKey.Shift,
+    };
 }
