@@ -1,9 +1,12 @@
 import React, { useMemo } from "react";
+import SpotifyIcon from "../assets/icons/SpotifyIcon";
 import { getConfig, ConfigKey } from "../config/Config";
+import { useFilterContext } from "../context/context";
 import { Folder } from "../models/Folder";
 import { ItemType } from "../models/Item";
 import { Playlist } from "../models/Playlist";
-import { flattenLibrary, folderItemsContainsSearchTerm, getNameWithHighlightedSearchTerm, sortItemsBySearchTerm } from "../utils/utils";
+import { flattenLibrary, folderItemsContainsSearchTerm, getNameWithHighlightedSearchTerm, sortItemsBySearchTerm, startPlaybackFromItem } from "../utils/utils";
+import NowPlayingIndicator from "./NowPlayingIndicator";
 import { PlaylistItem } from "./PlaylistItem";
 
 interface Props {
@@ -15,6 +18,7 @@ interface Props {
 }
 
 const FolderItem = ({ searchTerm, folder, indentation = 0, deadEnd, recursiveOpen }: Props) => {
+    const { sortOption, currentlyPlayingUri } = useFilterContext();
     const [folderIsOpen, setFolderIsOpen] = React.useState(recursiveOpen);
 
     const goToFolder = (e: React.MouseEvent<any>) => {
@@ -45,8 +49,8 @@ const FolderItem = ({ searchTerm, folder, indentation = 0, deadEnd, recursiveOpe
             .filter(item => item.type === ItemType.Folder || item.type === ItemType.Playlist) as (Playlist | Folder)[];
 
         return items
-            .sort((a, b) => sortItemsBySearchTerm(a, b, searchTerm))
-    }, [searchTerm]);
+            .sort((a, b) => sortItemsBySearchTerm(a, b, searchTerm, sortOption))
+    }, [searchTerm, sortOption]);
 
     return (
         <>
@@ -66,7 +70,7 @@ const FolderItem = ({ searchTerm, folder, indentation = 0, deadEnd, recursiveOpe
                     className="main-rootlist-rootlistItemOverlay"
                 />
 
-                <svg
+                <SpotifyIcon
                     height="1.5em"
                     width="1.5em"
                     fill="currentColor"
@@ -74,12 +78,14 @@ const FolderItem = ({ searchTerm, folder, indentation = 0, deadEnd, recursiveOpe
                         marginRight: 12,
                         padding: 3,
                     }}
-                    dangerouslySetInnerHTML={{ __html: Spicetify.SVGIcons["playlist-folder"] }} />
+                    icon="playlist-folder"
+                />
 
                 <a
                     className="standalone-ellipsis-one-line main-rootlist-rootlistItemLink"
                     draggable="false"
                     onClick={goToFolder}
+                    onDoubleClick={() => startPlaybackFromItem(folder)}
                 >
                     <span
                         className="Type__TypeElement-sc-goli3j-0 gkqrGP main-rootlist-textWrapper"
@@ -88,7 +94,7 @@ const FolderItem = ({ searchTerm, folder, indentation = 0, deadEnd, recursiveOpe
                         <span dangerouslySetInnerHTML={{ __html: getNameWithHighlightedSearchTerm(folder.name, searchTerm) }} />
                     </span>
                 </a>
-
+                {currentlyPlayingUri === folder.uri && <div style={{ marginRight: 10 }}><NowPlayingIndicator /></div>}
                 <button
                     className="Button-sc-1dqy6lx-0 cWIysU main-rootlist-expandArrow"
                     aria-label="Expand folder"

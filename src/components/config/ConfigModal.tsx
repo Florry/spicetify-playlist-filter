@@ -86,6 +86,9 @@ const ConfigModal = () => {
             >
                 <div
                     className="main-embedWidgetGenerator-container"
+                    style={{
+                        width: "100%"
+                    }}
                 >
                     <div
                         className="main-trackCreditsModal-header"
@@ -131,7 +134,7 @@ const ConfigModal = () => {
                                             >
                                                 {
                                                     section
-                                                        .filter(config => !config.subKey || getConfig(config.subKey))
+                                                        .filter(config => !config.subKeyOf || getConfig(config.subKeyOf))
                                                         .map(configItem => {
                                                             console.log("hello");
 
@@ -143,14 +146,6 @@ const ConfigModal = () => {
                                                                             configItem.description &&
                                                                             (
                                                                                 <div
-                                                                                    // style={{
-                                                                                    //     fontSize: "0.875rem",
-                                                                                    //     boxSizing: "border-box",
-                                                                                    //     marginBlock: 0,
-                                                                                    //     fontWeight: 400,
-                                                                                    //     color: "var(--text-subdued,#6a6a6a)",
-                                                                                    //     fontFamily: "var(--font-family,CircularSp,CircularSp-Arab,CircularSp-Hebr,CircularSp-Cyrl,CircularSp-Grek,CircularSp-Deva,var(--fallback-fonts,sans-serif))",
-                                                                                    // }}
                                                                                     className="Type__TypeElement-sc-goli3j-0 dvSMET main-trackCreditsModal-creditsEntry playlist-filter-config-description"
                                                                                 >
                                                                                     {configItem.description}
@@ -162,23 +157,14 @@ const ConfigModal = () => {
                                                                         <div className="x-settings-row">
                                                                             <div className="x-settings-firstColumn"
                                                                                 style={{
-                                                                                    display: "flex",
-                                                                                    flexWrap: "wrap"
+                                                                                    display: "block"
                                                                                 }}>
-                                                                                <label className="Type__TypeElement-sc-goli3j-0 cOOTQS">
+                                                                                <div className="Type__TypeElement-sc-goli3j-0 cOOTQS">
                                                                                     {configItem.label}
-                                                                                </label>
+                                                                                </div>
                                                                                 {
                                                                                     configItem.description &&
                                                                                     <div
-                                                                                        // style={{
-                                                                                        //     fontSize: "0.875rem",
-                                                                                        //     boxSizing: "border-box",
-                                                                                        //     marginBlock: 0,
-                                                                                        //     fontWeight: 400,
-                                                                                        //     color: "var(--text-subdued,#6a6a6a)",
-                                                                                        //     fontFamily: "var(--font-family,CircularSp,CircularSp-Arab,CircularSp-Hebr,CircularSp-Cyrl,CircularSp-Grek,CircularSp-Deva,var(--fallback-fonts,sans-serif))",
-                                                                                        // }}
                                                                                         className="Type__TypeElement-sc-goli3j-0 dvSMET main-trackCreditsModal-creditsEntry playlist-filter-config-description"
                                                                                     >
                                                                                         {configItem.description}

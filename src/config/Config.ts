@@ -1,3 +1,5 @@
+import { SortOption } from "../constants/constants";
+
 export enum ConfigKey {
     UseKeyboardShortcuts = "useKeyboardShortcuts",
     KeyboardShortcutKey = "keyboardShortcutKey",
@@ -6,7 +8,10 @@ export enum ConfigKey {
     IncludeFoldersInResult = "includeFoldersInResult",
     HideUnrelatedInFolders = "hideUnrelatedInFolders",
     OpenFoldersRecursively = "openFoldersRecursively",
-    PlaylistListRefreshInterval = "playlistListRefreshInterval"
+    PlaylistListRefreshInterval = "playlistListRefreshInterval",
+    DefaultSorting = "defaultSorting",
+    DebounceDefaultSorting = "debounceDefaultSorting",
+    SortingDebounceTime = "sortingDebounceTime"
 }
 
 export const defaultConfig = {
@@ -17,7 +22,10 @@ export const defaultConfig = {
     [ConfigKey.IncludeFoldersInResult]: true,
     [ConfigKey.OpenFoldersRecursively]: true,
     [ConfigKey.HideUnrelatedInFolders]: false,
-    [ConfigKey.PlaylistListRefreshInterval]: 1000 * 30 * 60
+    [ConfigKey.PlaylistListRefreshInterval]: 1000 * 30 * 60,
+    [ConfigKey.DefaultSorting]: SortOption.Relevance,
+    [ConfigKey.DebounceDefaultSorting]: true,
+    [ConfigKey.SortingDebounceTime]: 7000
 };
 
 const config: Record<ConfigKey, any> = {
@@ -54,6 +62,7 @@ for (const key in config) {
 }
 
 export function getConfig(key: ConfigKey) {
+    console.log(key, config[key]);
     return config[key];
 }
 
@@ -86,7 +95,7 @@ export type ConfigItem = {
     type: ConfigType;
     label: string;
     description?: string;
-    subKey?: ConfigKey;
+    subKeyOf?: ConfigKey;
     options?: SelectOptions | InputOptions;
     /** Returns whether to reload spotify after closing the config modal */
     onValueChange?: (value: any) => boolean | void;
@@ -123,7 +132,7 @@ export const configItems: ConfigItem[][] = [
             type: ConfigType.Input,
             label: "Keyboard shortcut key",
             description: "The key to use for the keyboard shortcut",
-            subKey: ConfigKey.UseKeyboardShortcuts,
+            subKeyOf: ConfigKey.UseKeyboardShortcuts,
             options: {
                 maxLength: 1
             },
@@ -133,7 +142,7 @@ export const configItems: ConfigItem[][] = [
             key: ConfigKey.KeyboardShortcutModifierKey,
             type: ConfigType.Select,
             label: "Keyboard shortcut modifier key",
-            subKey: ConfigKey.UseKeyboardShortcuts,
+            subKeyOf: ConfigKey.UseKeyboardShortcuts,
             options: [
                 { label: "None", value: "" },
                 { label: "Ctrl", value: "ctrl" },
@@ -161,14 +170,44 @@ export const configItems: ConfigItem[][] = [
             type: ConfigType.Checkbox,
             label: "Open folders recursively",
             description: "Opens folders recursively down to any playlist that matches the filter input when clicking on a folder in the filter result. E.g. if a folder contains a folder that doesn't match the input but it contains a playlist that does, the folder will be opened",
-            subKey: ConfigKey.IncludeFoldersInResult,
+            subKeyOf: ConfigKey.IncludeFoldersInResult,
         },
         {
             key: ConfigKey.HideUnrelatedInFolders,
             type: ConfigType.Checkbox,
             label: "Hide unrelated playlists in folders",
             description: "Hides playlists and folders in folders that don't match the filter input",
-            subKey: ConfigKey.IncludeFoldersInResult,
+            subKeyOf: ConfigKey.IncludeFoldersInResult,
+        }
+    ],
+    [
+        {
+            key: "" as ConfigKey,
+            label: "Sorting",
+            type: ConfigType.Title,
+        },
+        {
+            key: ConfigKey.DefaultSorting,
+            type: ConfigType.Select,
+            label: "Default sorting",
+            options: [
+                { label: "By relevance", value: SortOption.Relevance },
+                { label: "By name (A-Z)", value: SortOption.NameAsc },
+                { label: "By name (Z-A)", value: SortOption.NameDesc },
+            ]
+        },
+        {
+            key: ConfigKey.DebounceDefaultSorting,
+            type: ConfigType.Checkbox,
+            label: "Debounce default sorting",
+            description: "Debounces resetting the sorting to the default sorting when the filter input is cleared by removing all characters. Good for if you want to clear the filter input and then type a new filter without the sorting resetting in between, but still have the sorting reset back when done filtering. Pressing escape or the clear icon will not debounce the sorting reset",
+        },
+        {
+            key: ConfigKey.SortingDebounceTime,
+            type: ConfigType.Input,
+            label: "Debounce time",
+            description: "The time to debounce in milliseconds",
+            subKeyOf: ConfigKey.DebounceDefaultSorting,
         }
     ],
     [

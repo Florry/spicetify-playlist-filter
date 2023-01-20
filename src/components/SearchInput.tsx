@@ -1,12 +1,17 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import FilterIcon from "../assets/icons/FilterIcon";
+import SpotifyIcon from "../assets/icons/SpotifyIcon";
 import getPlaylistData from "../clients/CosmosClient";
 import { SpotifyClient } from "../clients/SpotifyClient";
 import { ConfigKey, getConfig } from "../config/Config";
+import { FilterState, SortOption } from "../constants/constants";
+import { FilterContext } from "../context/context";
 import { Folder } from "../models/Folder";
 import { Playlist } from "../models/Playlist";
 import { flattenLibrary, getConfiguredKeyboardKeys, sortItemsBySearchTerm } from "../utils/utils";
 import FolderItem, { folderIsDeadEnd, shouldRenderFolder } from "./FolderItem";
 import { PlaylistItem } from "./PlaylistItem";
+import SortOrderSelector from "./SortOrderSelector";
 import { clearButtonStyling, searchInputStyling, searchStyling, ulStyling } from "./styling/PlaylistFilterStyling";
 
 let searchInputElement: HTMLInputElement | null = null;
@@ -26,6 +31,13 @@ interface Props {
 }
 
 export const SearchInput = (({ onFilter }: Props) => {
+    const [filterState, setFilterState] = useState<FilterState>({
+        currentlyPlayingUri: "",
+        draggingUri: "",
+        searchQuery: "",
+        sortOption: getConfig(ConfigKey.DefaultSorting),
+    });
+
     const [playlists, setPlaylists] = useState<(Playlist | Folder)[]>([]);
     const [playlistContainer, setPlaylistContainer] = useState(document.querySelector("#spicetify-playlist-list"));
     const [searchTerm, setSearchTerm] = useState("");
@@ -60,14 +72,42 @@ export const SearchInput = (({ onFilter }: Props) => {
             }
         }, getConfig(ConfigKey.PlaylistListRefreshInterval));
 
+        const setCurrentPlayingPlaylistUri = () => {
+            const currentlyPlayingPlaylistUri = Spicetify.Player.data.context_uri;
+
+            setFilterState({
+                ...filterState,
+                currentlyPlayingUri: currentlyPlayingPlaylistUri,
+            });
+        };
+
+        Spicetify.Player.addEventListener("onplaypause", setCurrentPlayingPlaylistUri);
+        Spicetify.Player.addEventListener("songchange", setCurrentPlayingPlaylistUri);
+
+        setCurrentPlayingPlaylistUri();
+
         return () => {
             clearInterval(getPlaylistsInterval);
+            Spicetify.Player.removeEventListener("onplaypause", setCurrentPlayingPlaylistUri);
+            Spicetify.Player.removeEventListener("songchange", setCurrentPlayingPlaylistUri);
         }
     }, []);
+
+    const resetSorting = () => setFilterState({
+        ...filterState,
+        sortOption: getConfig(ConfigKey.DefaultSorting),
+    });
+
+
+    const [debouncResetSortingToDefaultInterval, setDebouncResetSortingToDefaultInterval] = useState<NodeJS.Timeout | null>(null);
 
     const filterPlaylists = async (value: string) => {
         if (!playlistContainer) {
             await setPlaylistContainer(document.querySelector("#spicetify-playlist-list"));
+        }
+
+        if (debouncResetSortingToDefaultInterval) {
+            clearInterval(debouncResetSortingToDefaultInterval);
         }
 
         await setSearchTerm(value === " " ? "" : value);
@@ -75,26 +115,39 @@ export const SearchInput = (({ onFilter }: Props) => {
         if (value === "" || value === " ") {
             onFilter(true);
             playlistContainer?.removeAttribute("style");
+
+            if (getConfig(ConfigKey.DebounceDefaultSorting)) {
+                setDebouncResetSortingToDefaultInterval(setTimeout(() => resetSorting(), getConfig(ConfigKey.SortingDebounceTime)));
+            } else {
+                resetSorting();
+            }
         }
         else {
             onFilter(false);
             playlistContainer?.setAttribute("style", "display: none;");
         }
-
     }
 
     const clearFilter = async () => {
         await filterPlaylists("");
+        resetSorting();
     };
 
     const searchResults = useMemo(() => playlists.filter((playlist: (Playlist | Folder)) => {
         return playlist.name?.toLowerCase().includes(searchTerm.toLowerCase());
     }), [searchTerm]);
 
-    const sortedSearchResults = useMemo(() => searchResults.sort((a, b) => sortItemsBySearchTerm(a, b, searchTerm)), [searchTerm]);
+    const sortedSearchResults = useMemo(() => searchResults.sort((a, b) => sortItemsBySearchTerm(a, b, searchTerm, filterState.sortOption)), [searchTerm, filterState.sortOption]);
+
+    const setSortOption = (option: SortOption) => {
+        setFilterState({
+            ...filterState,
+            sortOption: option,
+        });
+    }
 
     return (
-        <>
+        <FilterContext.Provider value={filterState}>
             <div
                 id="playlist-filter-main-container"
                 className="main-navBar-navBarItem"
@@ -117,21 +170,22 @@ export const SearchInput = (({ onFilter }: Props) => {
                 />
                 {
                     searchTerm !== "" &&
-                    <div
-                        id="playlist-filter-clear-btn"
-                        style={clearButtonStyling}
-                        title="Clear filter"
-                        onClick={clearFilter}
-                    >
-                        <svg
-                            style={{
-                                fill: "var(--text-subdued)"
-                            }}
-                            dangerouslySetInnerHTML={{
-                                // @ts-ignore
-                                __html: Spicetify.SVGIcons["x"]
-                            }} />
-                    </div>
+                    (
+                        <>
+                            <SortOrderSelector onChange={setSortOption} />
+                            <div
+                                id="playlist-filter-clear-btn"
+                                style={clearButtonStyling}
+                                title="Clear filter"
+                                onClick={clearFilter}
+                            >
+                                <SpotifyIcon
+                                    style={{ fill: "var(--text-subdued)" }}
+                                    icon="x"
+                                />
+                            </div>
+                        </>
+                    )
                 }
             </div>
 
@@ -183,7 +237,7 @@ export const SearchInput = (({ onFilter }: Props) => {
                     </ul>
                 </>
             }
-        </>
+        </FilterContext.Provider>
     );
 });
 
