@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import FilterIcon from "../assets/icons/FilterIcon";
+import FilterIcon from "../assets/icons/SortIcon";
 import SpotifyIcon from "../assets/icons/SpotifyIcon";
 import { SortOption } from "../constants/constants";
 import { SORT_LANG } from "../constants/language";
@@ -12,6 +12,7 @@ type SortMenuOptions = {
 
 const filteringMenuOptions: SortMenuOptions = [
     { value: SortOption.Relevance },
+    { value: SortOption.Custom },
     { value: SortOption.NameAsc },
     { value: SortOption.NameDesc }
 ];

@@ -221,10 +221,12 @@ export async function getPlaylistArtwork(playlistUri: string) {
 
 // TODO: Only runs when react updates
 export function currentPageIsPlaylist(playlistUri: string) {
-    return Spicetify.Platform.History.location.pathname === "/playlist/" + playlistUri.replace("spotify:playlist:", "");
+    // return Spicetify.Platform.History.location.pathname === "/playlist/" + playlistUri.replace("spotify:playlist:", "");
+    return false;
 }
 
 // TODO: Only runs when react updates
 export function currentPageIsFolder(folderUri: string) {
-    return Spicetify.Platform.History.location.pathname === "/folder/" + folderUri.replace("spotify:folder:", "");
+    // return Spicetify.Platform.History.location.pathname === "/folder/" + folderUri.replace("spotify:folder:", "");
+    return false;
 }

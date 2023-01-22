@@ -1,11 +1,11 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import { SearchInput } from "./components/SearchInput";
+import { FilterInput } from "./components/FilterInput";
 import { registerSubMenues } from "./menues/subMenues";
 
 // TODO:
 // - Clean up code, add some more memoization, etc
-// - Make scrollbar slightly thinner to match spotify design better
+// - Add right click menu (figure out RadioStationProvider problem)
 
 async function main() {
     const sidebarItem = await waitForSidebar();
@@ -16,10 +16,10 @@ async function main() {
         if (searchCleared)
             div.removeAttribute("style");
         else
-            div.setAttribute("style", "height: 100vh; max-height: 100%;");
+            div.setAttribute("style", "height: 100%; max-height: 100%;");
     };
 
-    ReactDOM.render(<SearchInput onFilter={onFilter} />, div);
+    ReactDOM.render(<FilterInput onFilter={onFilter} />, div);
 
     sidebarItem.parentNode!.insertBefore(div, sidebarItem);
 

@@ -25,7 +25,7 @@ export const defaultConfig = {
     [ConfigKey.IncludeFoldersInResult]: true,
     [ConfigKey.OpenFoldersRecursively]: true,
     [ConfigKey.HideUnrelatedInFolders]: false,
-    [ConfigKey.PlaylistListRefreshInterval]: 1000 * 30 * 60,
+    [ConfigKey.PlaylistListRefreshInterval]: 1000 * 60 * 30,
     [ConfigKey.DefaultSorting]: SortOption.Relevance,
     [ConfigKey.DebounceDefaultSorting]: true,
     [ConfigKey.SortingDebounceTime]: 7000,
@@ -210,6 +210,7 @@ export const configItems: ConfigItem[][] = [
             label: "Default sorting when filtering",
             options: [
                 { label: "By relevance", value: SortOption.Relevance },
+                { label: "Custom", value: SortOption.Custom },
                 { label: "By name (A-Z)", value: SortOption.NameAsc },
                 { label: "By name (Z-A)", value: SortOption.NameDesc },
             ]

@@ -8,7 +8,7 @@ const FilterIcon = () => (
 		viewBox="0 0 24 24"
 		style={{
 			fill: "currentColor",
-			"transform": "scale(0.75) translate(0px, -5px)"
+			"transform": "scale(0.75) translate(-5px, -5px)"
 		}}
 	>
 		<path

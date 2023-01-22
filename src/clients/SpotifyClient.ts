@@ -27,9 +27,10 @@ export class SpotifyClient {
         return await Spicetify.CosmosAsync.get(`https://api.spotify.com/v1/albums/${albumUri}/tracks`);
     }
 
-    static async getUsernameUri() {
+    static async getUsername() {
         const response = await Spicetify.CosmosAsync.get("https://api.spotify.com/v1/me");
-        return response.uri;
+
+        return response.uri.replace("spotify:user:", "");
     }
 
     static async getPlaylistData(nextUrl = "https://api.spotify.com/v1/me/playlists?limit=50"): Promise<any> {
@@ -48,5 +49,17 @@ export class SpotifyClient {
         } else {
             SpotifyClient.loading.set("getPlaylistData", false);
         }
+    }
+
+    static async addSongToPlaylist(playlistUri: string, songUri: string) {
+        return await Spicetify.CosmosAsync.post(`https://api.spotify.com/v1/playlists/${playlistUri.replace("spotify:playlist:", "")}/tracks`, {
+            uris: [songUri],
+        })
+    }
+
+    static async createPlaylist(name: string, folderUri: string) {
+        return await Spicetify.Platform.RootlistAPI.createPlaylist(name, {
+            after: { uri: folderUri },
+        })
     }
 }

@@ -3,8 +3,14 @@ import { FilterState, SortOption } from "../constants/constants";
 
 const defaultState: FilterState = {
 	currentlyPlayingUri: "",
-	draggingUri: "",
-	searchQuery: "",
+	draggingSourceName: "",
+	draggingSourceUri: "",
+	filterTerm: "",
+	isPlaying: false,
+	isSortingWithoutFiltering: false,
+	onDraggingDropped: () => { },
+	openLibraryFolders: [],
+	sortOptionWithoutFiltering: SortOption.Custom,
 	sortOption: SortOption.Relevance,
 };
 

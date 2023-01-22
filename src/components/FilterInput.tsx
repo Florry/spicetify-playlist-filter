@@ -7,6 +7,7 @@ import { FilterContext } from "../context/context";
 import { Folder } from "../models/Folder";
 import { Playlist } from "../models/Playlist";
 import { flattenLibrary, getConfiguredKeyboardKeys, getOpenFolderState, sanitizeLibrary, sortItems } from "../utils/utils";
+import DebugPanel from "./DebugPanel";
 import FolderItem, { folderIsDeadEnd, shouldRenderFolder } from "./FolderItem";
 import { PlaylistItem } from "./PlaylistItem";
 import SortOrderSelector from "./SortOrderSelector";
@@ -30,11 +31,11 @@ interface Props {
     onFilter: (searchCleared: boolean) => void;
 }
 
-export const SearchInput = (({ onFilter }: Props) => {
+export const FilterInput = (({ onFilter }: Props) => {
     const [filterTerm, setFilterTerm] = useState<string>("");
     const [currentlyPlayingUri, setCurrentlyPlayingUri] = useState<string>("");
-    const [draggingUri, setDraggingUri] = useState<string>(""); // TODO: 
-    const [draggingTarget, setDraggingTarget] = useState<string>(""); // TODO: 
+    const [draggingSourceUri, setDraggingSourceUri] = useState<string>("");
+    const [draggingSourceName, setDraggingSourceName] = useState<string>("");
     const [sortOption, setSortOption] = useState<SortOption>(getConfig(ConfigKey.DefaultSorting));
     const [sortOptionWithoutFiltering, setSortOptionWithoutFiltering] = useState<SortOption>(SortOption.Custom);
     const [isSortingWithoutFiltering, setSortingWithoutFiltering] = useState<boolean>(false);
@@ -44,13 +45,18 @@ export const SearchInput = (({ onFilter }: Props) => {
     const filterState: FilterState = {
         filterTerm,
         currentlyPlayingUri,
-        draggingUri,
-        draggingTarget,
+        draggingSourceUri,
+        draggingSourceName,
         sortOption,
         sortOptionWithoutFiltering,
         isSortingWithoutFiltering,
         openLibraryFolders,
-        isPlaying
+        isPlaying,
+
+        onDraggingDropped: () => {
+            setDraggingSourceUri("");
+            setDraggingSourceName("");
+        }
     }
 
     useEffect(() => {
@@ -80,7 +86,33 @@ export const SearchInput = (({ onFilter }: Props) => {
 
     const searchInput = useRef<HTMLInputElement>(null);
 
+    /* Super hacky way to get the song uri from a playlist html element */
+    const setDraggingSource = async (e: Event) => {
+        // Dragging from playlist?
+        // @ts-ignore
+        const songName = e?.target?.querySelector(".main-trackList-rowTitle")?.innerText;
+        // @ts-ignore
+        const albumUrl = e.target?.querySelector(".Type__TypeElement-sc-goli3j-0.hGXzYa")?.firstChild?.href;
 
+        if (albumUrl && songName) {
+            const albumUri = albumUrl?.substring(albumUrl?.lastIndexOf("/") + 1, albumUrl?.length);
+            const songUri = await SpotifyClient.getSongFromAlbum(albumUri, songName);
+
+            setDraggingSourceUri(songUri);
+            setDraggingSourceName(songName);
+        } else {
+            // Dragging from now playing?
+            console.log(e?.target);
+
+            // @ts-ignore
+            if (e?.target?.querySelector('a[referrer="now_playing_bar"]')) {
+                if (Spicetify.Player.data.track?.uri && Spicetify.Player.data.track?.metadata?.title) {
+                    setDraggingSourceUri(Spicetify.Player.data.track?.uri);
+                    setDraggingSourceName(Spicetify.Player.data.track?.metadata?.title);
+                }
+            }
+        }
+    };
 
     useEffect(() => {
         getPlaylists();
@@ -96,7 +128,7 @@ export const SearchInput = (({ onFilter }: Props) => {
         }
 
         const getPlaylistsInterval = setInterval(() => {
-            SpotifyClient.getPlaylistData();
+            getPlaylists();
 
             if (!getConfig(ConfigKey.UsePlaylistCovers)) {
                 SpotifyClient.getPlaylistData();
@@ -117,26 +149,10 @@ export const SearchInput = (({ onFilter }: Props) => {
         Spicetify.Player.addEventListener("onplaypause", onPlayPause as any);
         Spicetify.Player.addEventListener("songchange", setCurrentPlayingPlaylistUri);
 
-        // window.addEventListener("dragend", async (e) => {
-        //     console.log("YO?", searchTerm);
+        const debounceResetDraggingSource = () => setTimeout(() => filterState.onDraggingDropped(), 200)
 
-        //     // if (searchTerm !== "") {
-        //     // @ts-ignore
-        //     const songName = e?.target?.querySelector(".main-trackList-rowTitle")?.innerText;
-        //     // @ts-ignore
-        //     const albumUrl = e.target?.querySelector(".Type__TypeElement-sc-goli3j-0.hGXzYa")?.firstChild?.href;
-
-        //     if (albumUrl && songName) {
-        //         const albumUri = albumUrl?.substring(albumUrl?.lastIndexOf("/") + 1, albumUrl?.length);
-        //         const songUri = await SpotifyClient.getSongFromAlbum(albumUri, songName);
-
-        //         setFilterState({
-        //             ...filterState,
-        //             draggingUri: songUri,
-        //         });
-        //     }
-        //     // }
-        // });
+        window.document.querySelector("body")?.addEventListener("dragstart", setDraggingSource);
+        window.document.querySelector("body")?.addEventListener("dragend", debounceResetDraggingSource);
 
         setCurrentPlayingPlaylistUri();
 
@@ -144,6 +160,8 @@ export const SearchInput = (({ onFilter }: Props) => {
             clearInterval(getPlaylistsInterval);
             Spicetify.Player.removeEventListener("onplaypause", setCurrentPlayingPlaylistUri);
             Spicetify.Player.removeEventListener("songchange", setCurrentPlayingPlaylistUri);
+            window.document.querySelector("body")?.removeEventListener("dragStart", setDraggingSource);
+            window.document.querySelector("body")?.removeEventListener("dragend", debounceResetDraggingSource);
         }
     }, []);
 
@@ -224,18 +242,21 @@ export const SearchInput = (({ onFilter }: Props) => {
 
     return (
         <>
-            {/* <pre style={{
-                position: "absolute", left: 573,
-                background: "var(--background-base)"
-            }}>
-                {JSON.stringify(filterState, null, 2)}
-            </pre> */}
             <FilterContext.Provider value={filterState}>
                 <div
                     id="playlist-filter-main-container"
                     className="main-navBar-navBarItem"
                     style={searchStyling}
                 >
+                    <style>
+                        {
+                            `
+                                #playlist-filter-results::-webkit-scrollbar {
+                                    width: 12px;
+                                }
+                            `
+                        }
+                    </style>
                     <input
                         id="playlist-filter-input"
                         style={searchInputStyling}
