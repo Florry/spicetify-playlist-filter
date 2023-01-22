@@ -5,9 +5,10 @@ import { useFilterContext } from "../context/context";
 import { Folder } from "../models/Folder";
 import { ItemType } from "../models/Item";
 import { Playlist } from "../models/Playlist";
-import { flattenLibrary, folderItemsContainsSearchTerm, getNameWithHighlightedSearchTerm, sortItemsBySearchTerm, startPlaybackFromItem } from "../utils/utils";
+import { currentPageIsFolder, flattenLibrary, folderItemsContainsSearchTerm, getNameWithHighlightedSearchTerm, setFolderOpenState, sortItems, startPlaybackFromItem } from "../utils/utils";
 import NowPlayingIndicator from "./NowPlayingIndicator";
 import { PlaylistItem } from "./PlaylistItem";
+import { listItemStyling, mainRootlistItemRootlistItemStyling } from "./styling/PlaylistItemStyling";
 
 interface Props {
     searchTerm: string;
@@ -18,8 +19,8 @@ interface Props {
 }
 
 const FolderItem = ({ searchTerm, folder, indentation = 0, deadEnd, recursiveOpen }: Props) => {
-    const { sortOption, currentlyPlayingUri } = useFilterContext();
-    const [folderIsOpen, setFolderIsOpen] = React.useState(recursiveOpen);
+    const { sortOption, sortOptionWithoutFiltering, isSortingWithoutFiltering: sortingWithoutFiltering, currentlyPlayingUri, openLibraryFolders } = useFilterContext();
+    const [folderIsOpen, setFolderIsOpen] = React.useState(recursiveOpen || sortingWithoutFiltering && openLibraryFolders.includes(folder.uri));
 
     const goToFolder = (e: React.MouseEvent<any>) => {
         e.preventDefault();
@@ -35,22 +36,31 @@ const FolderItem = ({ searchTerm, folder, indentation = 0, deadEnd, recursiveOpe
         if (deadEnd) {
             return;
         }
+
         e.preventDefault();
 
         if (folderIsOpen) {
+            if (getConfig(ConfigKey.SyncOpeningFoldersBetweenSorting)) {
+                setFolderOpenState(folder.uri, false);
+            }
+
             setFolderIsOpen(false);
         } else {
+            if (getConfig(ConfigKey.SyncOpeningFoldersBetweenSorting)) {
+                setFolderOpenState(folder.uri, true);
+            }
+
             setFolderIsOpen(true);
         }
     }
 
-    const sortedSearchResults = useMemo(() => {
+    const sortedItems = useMemo(() => {
         const items = folder.items
             .filter(item => item.type === ItemType.Folder || item.type === ItemType.Playlist) as (Playlist | Folder)[];
 
         return items
-            .sort((a, b) => sortItemsBySearchTerm(a, b, searchTerm, sortOption))
-    }, [searchTerm, sortOption]);
+            .sort((a, b) => sortItems(a, b, searchTerm, sortingWithoutFiltering ? sortOptionWithoutFiltering : sortOption))
+    }, [searchTerm, sortOption, sortOptionWithoutFiltering]);
 
     return (
         <>
@@ -59,9 +69,9 @@ const FolderItem = ({ searchTerm, folder, indentation = 0, deadEnd, recursiveOpe
                 class="main-rootlist-rootlistItem playlist-item"
                 draggable="true"
                 style={{
+                    ...listItemStyling,
                     // @ts-ignore
                     "--indentation": indentation,
-                    cursor: deadEnd ? "default" : "pointer",
                 }}
                 aria-expanded="false"
             >
@@ -70,30 +80,41 @@ const FolderItem = ({ searchTerm, folder, indentation = 0, deadEnd, recursiveOpe
                     className="main-rootlist-rootlistItemOverlay"
                 />
 
-                <SpotifyIcon
-                    height="1.5em"
-                    width="1.5em"
-                    fill="currentColor"
-                    style={{
-                        marginRight: 12,
-                        padding: 3,
-                    }}
-                    icon="playlist-folder"
-                />
-
-                <a
+                <div
+                    aria-current="page"
                     className="standalone-ellipsis-one-line main-rootlist-rootlistItemLink"
                     draggable="false"
-                    onClick={goToFolder}
-                    onDoubleClick={() => startPlaybackFromItem(folder)}
                 >
-                    <span
-                        className="Type__TypeElement-sc-goli3j-0 gkqrGP main-rootlist-textWrapper"
-                        dir="auto"
+                    {
+                        getConfig(ConfigKey.UsePlaylistCovers) && (
+                            <SpotifyIcon
+                                height="1.5em"
+                                width="1.5em"
+                                fill="currentColor"
+                                style={{
+                                    marginRight: 12,
+                                    padding: 3,
+                                }}
+                                icon="playlist-folder"
+                            />
+                        )
+                    }
+
+                    <a
+                        className={`standalone-ellipsis-one-line main-rootlist-rootlistItemLink playlist-filter-results-playlist-link ${currentPageIsFolder(folder.uri) ? "main-rootlist-rootlistItemLinkActive" : ""}`}
+                        draggable="true"
+                        href={`/folder/${folder.uri.replace("spotify:folder:", "")}`}
+                        onClick={goToFolder}
+                        onDoubleClick={() => startPlaybackFromItem(folder)}
                     >
-                        <span dangerouslySetInnerHTML={{ __html: getNameWithHighlightedSearchTerm(folder.name, searchTerm) }} />
-                    </span>
-                </a>
+                        <span
+                            className="Type__TypeElement-sc-goli3j-0 gkqrGP main-rootlist-textWrapper"
+                            dir="auto"
+                        >
+                            <span dangerouslySetInnerHTML={{ __html: getNameWithHighlightedSearchTerm(folder.name, searchTerm) }} />
+                        </span>
+                    </a>
+                </div>
                 {currentlyPlayingUri === folder.uri && <div style={{ marginRight: 10 }}><NowPlayingIndicator /></div>}
                 <button
                     className="Button-sc-1dqy6lx-0 cWIysU main-rootlist-expandArrow"
@@ -104,9 +125,7 @@ const FolderItem = ({ searchTerm, folder, indentation = 0, deadEnd, recursiveOpe
                     <span
                         aria-hidden="true"
                         className="IconWrapper__Wrapper-sc-16usrgb-0 eJHlti"
-                        style={{
-                            transform: folderIsOpen ? "rotate(90deg)" : "rotate(0deg)",
-                        }}
+                        style={{ transform: folderIsOpen ? "rotate(90deg)" : "rotate(0deg)" }}
                     >
 
                         <svg
@@ -126,7 +145,7 @@ const FolderItem = ({ searchTerm, folder, indentation = 0, deadEnd, recursiveOpe
 
             {
                 folderIsOpen &&
-                sortedSearchResults
+                sortedItems
                     .map((item, i) => {
                         if (item.type === ItemType.Folder) {
                             if (shouldRenderFolder(item, searchTerm)) {
@@ -136,7 +155,7 @@ const FolderItem = ({ searchTerm, folder, indentation = 0, deadEnd, recursiveOpe
                                     <FolderItem
                                         searchTerm={searchTerm}
                                         folder={item}
-                                        key={item.uri + i}
+                                        key={item.uri + folder.uri}
                                         indentation={indentation + 1}
                                         deadEnd={getConfig(ConfigKey.HideUnrelatedInFolders) ? isDeadEnd : false}
                                         recursiveOpen={getConfig(ConfigKey.OpenFoldersRecursively) ? folderContainsImmediateResult(folder, searchTerm) : false}
@@ -149,7 +168,7 @@ const FolderItem = ({ searchTerm, folder, indentation = 0, deadEnd, recursiveOpe
                                     <PlaylistItem
                                         searchTerm={searchTerm}
                                         playlist={item}
-                                        key={item.uri + i}
+                                        key={item.uri + folder.uri}
                                         indentation={indentation - 0.5}
                                     />
                                 )
@@ -187,15 +206,10 @@ export function folderIsDeadEnd(folder: Folder, searchTerm: string) {
         return true;
     }
 
-    // if (TEMP_CONFIG_HIDE_UNRELATED_IN_FOLDERS) {
-    //     return folderItemsContainsSearchTerm(folder, searchTerm);
-    // }
-
     return false;
 }
 
 function folderContainsPlaylist(folder: Folder, searchTerm: string) {
-    // searches recursively
     const flattenedLibrary = flattenLibrary([folder]);
 
     return flattenedLibrary.find(item => {

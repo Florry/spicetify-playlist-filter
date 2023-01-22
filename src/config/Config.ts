@@ -11,7 +11,10 @@ export enum ConfigKey {
     PlaylistListRefreshInterval = "playlistListRefreshInterval",
     DefaultSorting = "defaultSorting",
     DebounceDefaultSorting = "debounceDefaultSorting",
-    SortingDebounceTime = "sortingDebounceTime"
+    SortingDebounceTime = "sortingDebounceTime",
+    SyncOpeningFoldersBetweenSorting = "syncOpeningFoldersBetweenSorting", // TODO: Implement
+    KeepOpenFoldersFromCustomOpen = "keepOpenFoldersFromCustomOpen",
+    FlattenLibraryWhenSortingOtherThanCustom = "flattenLibraryWhenSortingOtherThanCustom",
 }
 
 export const defaultConfig = {
@@ -25,7 +28,10 @@ export const defaultConfig = {
     [ConfigKey.PlaylistListRefreshInterval]: 1000 * 30 * 60,
     [ConfigKey.DefaultSorting]: SortOption.Relevance,
     [ConfigKey.DebounceDefaultSorting]: true,
-    [ConfigKey.SortingDebounceTime]: 7000
+    [ConfigKey.SortingDebounceTime]: 7000,
+    [ConfigKey.SyncOpeningFoldersBetweenSorting]: true,
+    [ConfigKey.KeepOpenFoldersFromCustomOpen]: true,
+    [ConfigKey.FlattenLibraryWhenSortingOtherThanCustom]: false,
 };
 
 const config: Record<ConfigKey, any> = {
@@ -62,7 +68,6 @@ for (const key in config) {
 }
 
 export function getConfig(key: ConfigKey) {
-    console.log(key, config[key]);
     return config[key];
 }
 
@@ -187,9 +192,22 @@ export const configItems: ConfigItem[][] = [
             type: ConfigType.Title,
         },
         {
+            key: ConfigKey.KeepOpenFoldersFromCustomOpen,
+            type: ConfigType.Checkbox,
+            label: "Keep open folders from \"custom\" open",
+            description: "Keeps folders from \"custom\" sorting open when sorting by name without filtering",
+        },
+        {
+            key: ConfigKey.FlattenLibraryWhenSortingOtherThanCustom,
+            type: ConfigType.Checkbox,
+            label: "Flatten library when sorting other than \"custom\"",
+            description: "Flattens the library when sorting without filtering, resulting in a list of all playlists within all folders. Note: Spotify will need to reload upon closing the modal when changing this setting.",
+            onValueChange: () => true,
+        },
+        {
             key: ConfigKey.DefaultSorting,
             type: ConfigType.Select,
-            label: "Default sorting",
+            label: "Default sorting when filtering",
             options: [
                 { label: "By relevance", value: SortOption.Relevance },
                 { label: "By name (A-Z)", value: SortOption.NameAsc },
@@ -199,8 +217,8 @@ export const configItems: ConfigItem[][] = [
         {
             key: ConfigKey.DebounceDefaultSorting,
             type: ConfigType.Checkbox,
-            label: "Debounce default sorting",
-            description: "Debounces resetting the sorting to the default sorting when the filter input is cleared by removing all characters. Good for if you want to clear the filter input and then type a new filter without the sorting resetting in between, but still have the sorting reset back when done filtering. Pressing escape or the clear icon will not debounce the sorting reset",
+            label: "Debounce reset to default sorting when filtering",
+            description: "Debounces resetting the sorting to the default sorting when the filter input is cleared by removing all characters. Good for if you want to clear the filter input and then type a new filter without the sorting resetting in between, but still have the sorting reset back when done filtering. Pressing escape, the clear button or clicking outside the filter input when empty will reset right away",
         },
         {
             key: ConfigKey.SortingDebounceTime,

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
-import { ConfigItem, configItems as configItemsImport, ConfigKey, ConfigType, defaultConfig, getConfigObject, InputOptions, resetConfigToDefault, SelectOptions, setConfig } from "../../config/Config";
+import { ConfigItem, configItems as configItemsImport, ConfigKey, ConfigType, getConfigObject, InputOptions, resetConfigToDefault, SelectOptions, setConfig } from "../../config/Config";
 import Checkbox from "./Checkbox";
 import Input from "./Input";
 import Select from "./Select";
@@ -136,8 +136,6 @@ const ConfigModal = () => {
                                                     section
                                                         .filter(config => !config.subKeyOf || getConfig(config.subKeyOf))
                                                         .map(configItem => {
-                                                            console.log("hello");
-
                                                             return (
                                                                 configItem.type === ConfigType.Title ?
                                                                     <>

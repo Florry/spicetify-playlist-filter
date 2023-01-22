@@ -1,20 +1,20 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import FilterIcon from "../assets/icons/FilterIcon";
 import SpotifyIcon from "../assets/icons/SpotifyIcon";
-import getPlaylistData from "../clients/CosmosClient";
 import { SpotifyClient } from "../clients/SpotifyClient";
 import { ConfigKey, getConfig } from "../config/Config";
 import { FilterState, SortOption } from "../constants/constants";
 import { FilterContext } from "../context/context";
 import { Folder } from "../models/Folder";
 import { Playlist } from "../models/Playlist";
-import { flattenLibrary, getConfiguredKeyboardKeys, sortItemsBySearchTerm } from "../utils/utils";
+import { flattenLibrary, getConfiguredKeyboardKeys, getOpenFolderState, sanitizeLibrary, sortItems } from "../utils/utils";
 import FolderItem, { folderIsDeadEnd, shouldRenderFolder } from "./FolderItem";
 import { PlaylistItem } from "./PlaylistItem";
 import SortOrderSelector from "./SortOrderSelector";
 import { clearButtonStyling, searchInputStyling, searchStyling, ulStyling } from "./styling/PlaylistFilterStyling";
 
 let searchInputElement: HTMLInputElement | null = null;
+
+// TODO: this file has become a mess, clean it up
 
 export function registerKeyboardShortcut() {
     Spicetify.Keyboard.registerImportantShortcut(getConfiguredKeyboardKeys(), async () => {
@@ -31,31 +31,62 @@ interface Props {
 }
 
 export const SearchInput = (({ onFilter }: Props) => {
-    const [filterState, setFilterState] = useState<FilterState>({
-        currentlyPlayingUri: "",
-        draggingUri: "",
-        searchQuery: "",
-        sortOption: getConfig(ConfigKey.DefaultSorting),
-    });
+    const [filterTerm, setFilterTerm] = useState<string>("");
+    const [currentlyPlayingUri, setCurrentlyPlayingUri] = useState<string>("");
+    const [draggingUri, setDraggingUri] = useState<string>(""); // TODO: 
+    const [draggingTarget, setDraggingTarget] = useState<string>(""); // TODO: 
+    const [sortOption, setSortOption] = useState<SortOption>(getConfig(ConfigKey.DefaultSorting));
+    const [sortOptionWithoutFiltering, setSortOptionWithoutFiltering] = useState<SortOption>(SortOption.Custom);
+    const [isSortingWithoutFiltering, setSortingWithoutFiltering] = useState<boolean>(false);
+    const [openLibraryFolders, setOpenLibraryFolders] = useState<string[]>([]);
+    const [isPlaying, setIsPlaying] = useState<boolean>(false);
+
+    const filterState: FilterState = {
+        filterTerm,
+        currentlyPlayingUri,
+        draggingUri,
+        draggingTarget,
+        sortOption,
+        sortOptionWithoutFiltering,
+        isSortingWithoutFiltering,
+        openLibraryFolders,
+        isPlaying
+    }
+
+    useEffect(() => {
+        if (!filterState.filterTerm.length && filterState.sortOptionWithoutFiltering !== SortOption.Custom) {
+            setSortingWithoutFiltering(true);
+        } else {
+            setSortingWithoutFiltering(false);
+        }
+    }, [filterState.filterTerm, filterState.sortOptionWithoutFiltering]);
 
     const [playlists, setPlaylists] = useState<(Playlist | Folder)[]>([]);
+    const [library, setLibrary] = useState<(Playlist | Folder)[]>([]);
     const [playlistContainer, setPlaylistContainer] = useState(document.querySelector("#spicetify-playlist-list"));
-    const [searchTerm, setSearchTerm] = useState("");
 
     const getPlaylists = async () => {
         const library = await SpotifyClient.getLibrary();
         const playlists = flattenLibrary(library);
 
         setPlaylists(playlists);
+
+        if (getConfig(ConfigKey.FlattenLibraryWhenSortingOtherThanCustom)) {
+            setLibrary(playlists);
+        } else {
+            setLibrary(sanitizeLibrary(library));
+        }
     };
 
     const searchInput = useRef<HTMLInputElement>(null);
+
+
 
     useEffect(() => {
         getPlaylists();
 
         if (getConfig(ConfigKey.UsePlaylistCovers)) {
-            getPlaylistData();
+            SpotifyClient.getPlaylistData();
         }
 
         if (getConfig(ConfigKey.UseKeyboardShortcuts)) {
@@ -65,24 +96,47 @@ export const SearchInput = (({ onFilter }: Props) => {
         }
 
         const getPlaylistsInterval = setInterval(() => {
-            getPlaylistData();
+            SpotifyClient.getPlaylistData();
 
             if (!getConfig(ConfigKey.UsePlaylistCovers)) {
-                getPlaylistData();
+                SpotifyClient.getPlaylistData();
             }
         }, getConfig(ConfigKey.PlaylistListRefreshInterval));
 
         const setCurrentPlayingPlaylistUri = () => {
             const currentlyPlayingPlaylistUri = Spicetify.Player.data.context_uri;
 
-            setFilterState({
-                ...filterState,
-                currentlyPlayingUri: currentlyPlayingPlaylistUri,
-            });
+            setCurrentlyPlayingUri(currentlyPlayingPlaylistUri);
         };
 
-        Spicetify.Player.addEventListener("onplaypause", setCurrentPlayingPlaylistUri);
+        const onPlayPause = (e: Event & { data: Spicetify.PlayerState }) => {
+            setCurrentPlayingPlaylistUri();
+            setIsPlaying(!e.data.is_paused);
+        };
+
+        Spicetify.Player.addEventListener("onplaypause", onPlayPause as any);
         Spicetify.Player.addEventListener("songchange", setCurrentPlayingPlaylistUri);
+
+        // window.addEventListener("dragend", async (e) => {
+        //     console.log("YO?", searchTerm);
+
+        //     // if (searchTerm !== "") {
+        //     // @ts-ignore
+        //     const songName = e?.target?.querySelector(".main-trackList-rowTitle")?.innerText;
+        //     // @ts-ignore
+        //     const albumUrl = e.target?.querySelector(".Type__TypeElement-sc-goli3j-0.hGXzYa")?.firstChild?.href;
+
+        //     if (albumUrl && songName) {
+        //         const albumUri = albumUrl?.substring(albumUrl?.lastIndexOf("/") + 1, albumUrl?.length);
+        //         const songUri = await SpotifyClient.getSongFromAlbum(albumUri, songName);
+
+        //         setFilterState({
+        //             ...filterState,
+        //             draggingUri: songUri,
+        //         });
+        //     }
+        //     // }
+        // });
 
         setCurrentPlayingPlaylistUri();
 
@@ -93,152 +147,192 @@ export const SearchInput = (({ onFilter }: Props) => {
         }
     }, []);
 
-    const resetSorting = () => setFilterState({
-        ...filterState,
-        sortOption: getConfig(ConfigKey.DefaultSorting),
-    });
-
+    const resetSorting = () => setSortOption(getConfig(ConfigKey.DefaultSorting));
 
     const [debouncResetSortingToDefaultInterval, setDebouncResetSortingToDefaultInterval] = useState<NodeJS.Timeout | null>(null);
 
-    const filterPlaylists = async (value: string) => {
-        if (!playlistContainer) {
-            await setPlaylistContainer(document.querySelector("#spicetify-playlist-list"));
-        }
-
+    const filterPlaylists = async (value: string, debounce: boolean = true) => {
         if (debouncResetSortingToDefaultInterval) {
             clearInterval(debouncResetSortingToDefaultInterval);
         }
 
-        await setSearchTerm(value === " " ? "" : value);
+        await setFilterTerm(value === " " ? "" : value);
 
         if (value === "" || value === " ") {
-            onFilter(true);
-            playlistContainer?.removeAttribute("style");
-
-            if (getConfig(ConfigKey.DebounceDefaultSorting)) {
+            if (debounce && getConfig(ConfigKey.DebounceDefaultSorting)) {
                 setDebouncResetSortingToDefaultInterval(setTimeout(() => resetSorting(), getConfig(ConfigKey.SortingDebounceTime)));
             } else {
                 resetSorting();
             }
+
+            clearFilter();
         }
         else {
-            onFilter(false);
+            setSpotifyVanillaPlaylistListVisible(false);
+        }
+    }
+
+    const setSpotifyVanillaPlaylistListVisible = async (visible: boolean) => {
+        if (!playlistContainer) {
+            await setPlaylistContainer(document.querySelector("#spicetify-playlist-list"));
+        }
+
+        onFilter(visible);
+
+        if (visible) {
+            playlistContainer?.removeAttribute("style");
+        } else {
             playlistContainer?.setAttribute("style", "display: none;");
         }
     }
 
     const clearFilter = async () => {
-        await filterPlaylists("");
-        resetSorting();
+        if (filterState.sortOptionWithoutFiltering === SortOption.Custom) {
+            setSpotifyVanillaPlaylistListVisible(true);
+        } else {
+            setSpotifyVanillaPlaylistListVisible(false);
+        }
+
+        setFilterTerm("");
     };
 
     const searchResults = useMemo(() => playlists.filter((playlist: (Playlist | Folder)) => {
-        return playlist.name?.toLowerCase().includes(searchTerm.toLowerCase());
-    }), [searchTerm]);
+        return playlist.name?.toLowerCase().includes(filterState.filterTerm.toLowerCase());
+    })
+        .sort((a, b) => sortItems(a, b, filterState.filterTerm, filterState.sortOption)), [filterState.filterTerm, filterState.sortOption]);
 
-    const sortedSearchResults = useMemo(() => searchResults.sort((a, b) => sortItemsBySearchTerm(a, b, searchTerm, filterState.sortOption)), [searchTerm, filterState.sortOption]);
 
-    const setSortOption = (option: SortOption) => {
-        setFilterState({
-            ...filterState,
-            sortOption: option,
-        });
-    }
+    const changeSortOption = async (option: SortOption) => setSortOption(option);
+
+    const changeLibrarySortOption = async (option: SortOption) => {
+        await setSortOptionWithoutFiltering(option);
+
+        if (option === SortOption.Custom) {
+            setSpotifyVanillaPlaylistListVisible(true);
+        } else {
+            setOpenLibraryFolders(getOpenFolderState() as string[]);
+            setSpotifyVanillaPlaylistListVisible(false);
+        }
+    };
+
+    const sortedLibrary = useMemo(() => library.sort((a, b) => sortItems(a, b, filterState.filterTerm, filterState.sortOptionWithoutFiltering)), [filterState.sortOptionWithoutFiltering]);
+
+    const shouldDisplayFolders = (!isSortingWithoutFiltering
+        && getConfig(ConfigKey.IncludeFoldersInResult)) ||
+        (isSortingWithoutFiltering
+            && !getConfig(ConfigKey.FlattenLibraryWhenSortingOtherThanCustom));
 
     return (
-        <FilterContext.Provider value={filterState}>
-            <div
-                id="playlist-filter-main-container"
-                className="main-navBar-navBarItem"
-                style={searchStyling}
-            >
-                <input
-                    id="playlist-filter-input"
-                    style={searchInputStyling}
-                    // @ts-ignore
-                    ref={searchInput}
-                    placeholder="Filter"
-                    value={searchTerm}
-                    onChange={(e) => filterPlaylists(e.target.value)}
-                    onKeyDown={(e) => {
-                        if (e.key === "Escape") {
-                            clearFilter();
-                            searchInput.current?.blur();
-                        }
-                    }}
-                />
+        <>
+            {/* <pre style={{
+                position: "absolute", left: 573,
+                background: "var(--background-base)"
+            }}>
+                {JSON.stringify(filterState, null, 2)}
+            </pre> */}
+            <FilterContext.Provider value={filterState}>
+                <div
+                    id="playlist-filter-main-container"
+                    className="main-navBar-navBarItem"
+                    style={searchStyling}
+                >
+                    <input
+                        id="playlist-filter-input"
+                        style={searchInputStyling}
+                        ref={searchInput}
+                        placeholder="Filter"
+                        value={filterTerm}
+                        onChange={(e) => filterPlaylists(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Escape") {
+                                clearFilter();
+                                searchInput.current?.blur();
+                            }
+                        }}
+                        onBlur={() => {
+                            if (filterTerm.length === 0) {
+                                resetSorting();
+                            }
+                        }}
+                    />
+                    {
+                        !!filterTerm.length &&
+                        (
+                            <>
+                                <div
+                                    id="playlist-filter-clear-btn"
+                                    style={clearButtonStyling}
+                                    title="Clear filter"
+                                    onClick={() => {
+                                        resetSorting();
+                                        clearFilter();
+                                    }}
+                                >
+                                    <SpotifyIcon
+                                        style={{ fill: "var(--text-subdued)" }}
+                                        icon="x"
+                                    />
+                                </div>
+                            </>
+                        )
+                    }
+
+                    {
+                        !!filterState.filterTerm.length
+                            ? <SortOrderSelector onChange={changeSortOption} filtering={true} />
+                            : <SortOrderSelector onChange={changeLibrarySortOption} filtering={false} />
+                    }
+                </div>
+
                 {
-                    searchTerm !== "" &&
-                    (
-                        <>
-                            <SortOrderSelector onChange={setSortOption} />
-                            <div
-                                id="playlist-filter-clear-btn"
-                                style={clearButtonStyling}
-                                title="Clear filter"
-                                onClick={clearFilter}
-                            >
-                                <SpotifyIcon
-                                    style={{ fill: "var(--text-subdued)" }}
-                                    icon="x"
-                                />
-                            </div>
-                        </>
-                    )
-                }
-            </div>
-
-            {
-                searchTerm &&
-                <>
-                    <div
-                        id="playlist-filter-results-divider-container"
-                        className="main-rootlist-rootlistDividerContainer"
-                    >
-                        <hr
-                            id="playlist-filter-divider"
-                            className="main-rootlist-rootlistDivider"
-                        />
+                    (filterState.filterTerm || filterState.isSortingWithoutFiltering) &&
+                    <>
                         <div
-                            id="playlist-filter-results-divider-gradient"
-                            className="main-rootlist-rootlistDividerGradient"
-                        />
-                    </div>
-                    <ul
-                        id="playlist-filter-results"
-                        style={ulStyling}
-                    >
-                        {sortedSearchResults
-                            .map((item: any, i: number) => {
-                                if (item.type === "folder") {
-                                    const isDeadEnd = folderIsDeadEnd(item, searchTerm);
+                            id="playlist-filter-results-divider-container"
+                            className="main-rootlist-rootlistDividerContainer"
+                        >
+                            <hr
+                                id="playlist-filter-divider"
+                                className="main-rootlist-rootlistDivider"
+                            />
+                            <div
+                                id="playlist-filter-results-divider-gradient"
+                                className="main-rootlist-rootlistDividerGradient"
+                            />
+                        </div>
+                        <ul
+                            id="playlist-filter-results"
+                            style={ulStyling}
+                        >
+                            {(filterState.isSortingWithoutFiltering ? sortedLibrary : searchResults)
+                                .map((item: any) => {
+                                    if (item.type === "folder") {
+                                        const isDeadEnd = folderIsDeadEnd(item, filterState.filterTerm);
 
-                                    if (getConfig(ConfigKey.IncludeFoldersInResult) && shouldRenderFolder(item, searchTerm)) {
+                                        if (shouldDisplayFolders && shouldRenderFolder(item, filterState.filterTerm)) {
+                                            return (
+                                                <FolderItem
+                                                    searchTerm={filterState.filterTerm}
+                                                    folder={item}
+                                                    key={item.uri}
+                                                    deadEnd={getConfig(ConfigKey.HideUnrelatedInFolders) ? isDeadEnd : false}
+                                                />
+                                            );
+                                        }
+                                    } else {
                                         return (
-                                            <FolderItem
-                                                searchTerm={searchTerm}
-                                                folder={item}
-                                                key={item.uri + i}
-                                                deadEnd={getConfig(ConfigKey.HideUnrelatedInFolders) ? isDeadEnd : false}
+                                            <PlaylistItem
+                                                searchTerm={filterState.filterTerm}
+                                                playlist={item}
+                                                key={item.uri}
                                             />
                                         );
                                     }
-                                } else {
-                                    return (
-                                        <PlaylistItem
-                                            searchTerm={searchTerm}
-                                            playlist={item}
-                                            key={item.uri + i}
-                                        />
-                                    );
-                                }
-                            })}
-                    </ul>
-                </>
-            }
-        </FilterContext.Provider>
+                                })}
+                        </ul>
+                    </>
+                }
+            </FilterContext.Provider>
+        </>
     );
 });
-
-

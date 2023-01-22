@@ -2,27 +2,33 @@ import React, { useState } from "react";
 import FilterIcon from "../assets/icons/FilterIcon";
 import SpotifyIcon from "../assets/icons/SpotifyIcon";
 import { SortOption } from "../constants/constants";
+import { SORT_LANG } from "../constants/language";
 import { useFilterContext } from "../context/context";
 import { clearButtonStyling } from "./styling/PlaylistFilterStyling";
 
+type SortMenuOptions = {
+    value: SortOption;
+}[];
+
+const filteringMenuOptions: SortMenuOptions = [
+    { value: SortOption.Relevance },
+    { value: SortOption.NameAsc },
+    { value: SortOption.NameDesc }
+];
+
+const standardMenuOptions: SortMenuOptions = [
+    { value: SortOption.Custom },
+    { value: SortOption.NameAsc },
+    { value: SortOption.NameDesc }
+];
+
 interface Props {
     onChange: (option: SortOption) => void;
+    filtering: boolean;
 }
 
-const menuOptions = [{
-    label: "Sort by relevance",
-    value: SortOption.Relevance
-}, {
-    label: "Sort by name (A-Z)",
-    value: SortOption.NameAsc
-}, {
-    label: "Sort by name (Z-A)",
-    value: SortOption.NameDesc
-}
-]
-
-const SortOrderSelector = ({ onChange }: Props) => {
-    const { sortOption } = useFilterContext();
+const SortOrderSelector = ({ onChange, filtering }: Props) => {
+    const { sortOption, sortOptionWithoutFiltering } = useFilterContext();
     const [showSortMenu, setShowSortMenu] = useState(false);
     const toggleSortMenu = async () => setShowSortMenu(!showSortMenu);
 
@@ -37,7 +43,6 @@ const SortOrderSelector = ({ onChange }: Props) => {
                 id="playlist-filter-clear-btn"
                 style={clearButtonStyling}
                 title="Sorting"
-                // onClick={toggleSortMenu}
                 onMouseOver={() => setShowSortMenu(true)}
                 onMouseLeave={() => setShowSortMenu(false)}
             >
@@ -49,7 +54,7 @@ const SortOrderSelector = ({ onChange }: Props) => {
                             style={{
                                 zIndex: "9999",
                                 position: "absolute",
-                                inset: "47px 54px auto auto",
+                                inset: "37px 0px auto auto",
                                 margin: "0px",
                             }}
                         >
@@ -62,7 +67,7 @@ const SortOrderSelector = ({ onChange }: Props) => {
                                     className="main-contextMenu-menu"
                                 >
                                     {
-                                        menuOptions.map((option) => (
+                                        (filtering ? filteringMenuOptions : standardMenuOptions).map((option) => (
                                             <li
                                                 key={option.value}
                                                 role="presentation"
@@ -82,8 +87,8 @@ const SortOrderSelector = ({ onChange }: Props) => {
                                                             alignItems: "center",
                                                         }}
                                                     >
-                                                        <div>{option.label}</div>
-                                                        {option.value === sortOption && (
+                                                        <div>{SORT_LANG[option.value]}</div>
+                                                        {(filtering ? option.value === sortOption : option.value === sortOptionWithoutFiltering) && (
                                                             <div
                                                                 style={{
                                                                     marginLeft: 7,

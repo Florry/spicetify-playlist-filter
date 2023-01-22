@@ -1,5 +1,7 @@
+import { SpotifyClient } from "../clients/SpotifyClient";
 import { getConfig, ConfigKey, ModifierKey } from "../config/Config";
 import { SortOption } from "../constants/constants";
+import { getImageUrlByPlaylistUri } from "../data/imageUrlRepo";
 import { Folder } from "../models/Folder";
 import { Item, ItemType } from "../models/Item";
 import { Placeholder } from "../models/Placeholder";
@@ -12,7 +14,7 @@ export function flattenLibrary(library: (Folder | Playlist | Placeholder)[]): (P
     for (const item of library) {
         if (item.type === ItemType.Folder) {
             playlists.push(...flattenLibrary(item.items));
-            playlists.push(sanatizeFolder(item));
+            playlists.push(sanitizeFolder(item));
         } else if (item.type === ItemType.Playlist) {
             playlists.push(item);
         }
@@ -21,7 +23,21 @@ export function flattenLibrary(library: (Folder | Playlist | Placeholder)[]): (P
     return playlists;
 }
 
-function sanatizeFolder(item: Folder) {
+export function sanitizeLibrary(library: (Folder | Playlist | Placeholder)[]) {
+    const playlists: (Playlist | Folder)[] = [];
+
+    for (const item of library) {
+        if (item.type === ItemType.Folder) {
+            playlists.push(sanitizeFolder(item));
+        } else if (item.type === ItemType.Playlist) {
+            playlists.push(item);
+        }
+    }
+
+    return playlists;
+}
+
+function sanitizeFolder(item: Folder) {
     return {
         ...item,
         items: item.items.filter((item) => item.type !== ItemType.Placeholder)
@@ -75,7 +91,7 @@ export function folderItemsContainsSearchTerm(folder: Folder, searchTerm: string
     return false;
 }
 
-export function sortItemsBySearchTerm(a: Playlist | Folder, b: Playlist | Folder, searchTerm: string, sortOption: SortOption) {
+export function sortItems(a: Playlist | Folder, b: Playlist | Folder, searchTerm: string, sortOption: SortOption) {
     const lowercaseSearchTerm = searchTerm.toLowerCase();
 
     switch (sortOption) {
@@ -85,6 +101,8 @@ export function sortItemsBySearchTerm(a: Playlist | Folder, b: Playlist | Folder
             return sortByName();
         case SortOption.NameDesc:
             return sortByName() * -1;
+        case SortOption.Custom:
+            return 0;
     }
 
     function sortByRelevance() {
@@ -135,3 +153,78 @@ export function getConfiguredKeyboardKeys(): Spicetify.Keyboard.KeysDefine {
 }
 
 export const startPlaybackFromItem = (item: Item) => Spicetify.Player.playUri(item.uri);
+
+type OpenFoldersWithLocalStorageKey = {
+    localStorageKey: string;
+    openFolders: string[];
+    username: string;
+};
+
+export function getOpenFolderState(returnLocalStorageKey = false): string[] | OpenFoldersWithLocalStorageKey {
+    const localStorageKey = Object.keys(localStorage).find(key => key.match(/.*:expanded-folder/)) ?? "";
+    const username = localStorageKey?.replace(":expanded-folder", "");
+    const openFolders = JSON.parse(localStorage.getItem(localStorageKey) ?? "[]");
+
+    if (returnLocalStorageKey) {
+        return {
+            localStorageKey,
+            openFolders,
+            username
+        };
+    }
+
+    return openFolders.map((folder: string) => `spotify:user:${username}:folder:${folder}`);
+}
+
+export function setFolderOpenState(folderUri: string, open: boolean) {
+    return; // TODO: needs to be more than just update localstorage
+    // const { openFolders, localStorageKey, username } = getOpenFolderState(true) as OpenFoldersWithLocalStorageKey;
+
+    // let newState: string[] = [...openFolders];
+
+    // if (open) {
+    //     newState.push(folderUri.replace(`spotify:user:${username}:folder:`, ""));
+    // } else {
+    //     newState.splice(openFolders.indexOf(folderUri.replace(`spotify:user:${username}:folder:`, "")), 1);
+    // }
+
+    // localStorage.setItem(localStorageKey, JSON.stringify(newState));
+}
+
+export async function getPlaylistArtwork(playlistUri: string) {
+    const imagesForUri = getImageUrlByPlaylistUri(playlistUri);
+
+    if (imagesForUri.length > 0) {
+        return imagesForUri[0].url;
+    }
+
+    return new Promise((resolve) => {
+        const interval = setInterval(() => {
+            const imagesForUri = getImageUrlByPlaylistUri(playlistUri);
+
+            if (imagesForUri) {
+                clearInterval(interval);
+
+                if (imagesForUri) {
+                    if (imagesForUri.length) {
+                        resolve(imagesForUri[0].url);
+                    } else {
+                        resolve("");
+                    }
+                }
+            } else if (!SpotifyClient.loading.get("getPlaylistData")) {
+                SpotifyClient.getPlaylistData();
+            }
+        }, 100);
+    });
+}
+
+// TODO: Only runs when react updates
+export function currentPageIsPlaylist(playlistUri: string) {
+    return Spicetify.Platform.History.location.pathname === "/playlist/" + playlistUri.replace("spotify:playlist:", "");
+}
+
+// TODO: Only runs when react updates
+export function currentPageIsFolder(folderUri: string) {
+    return Spicetify.Platform.History.location.pathname === "/folder/" + folderUri.replace("spotify:folder:", "");
+}

@@ -4,7 +4,8 @@ import { SearchInput } from "./components/SearchInput";
 import { registerSubMenues } from "./menues/subMenues";
 
 // TODO:
-// - Add option for sorting playlists / folders inside folders
+// - Clean up code, add some more memoization, etc
+// - Make scrollbar slightly thinner to match spotify design better
 
 async function main() {
     const sidebarItem = await waitForSidebar();

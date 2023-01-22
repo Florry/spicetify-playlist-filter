@@ -35,5 +35,5 @@ export const ulStyling: React.CSSProperties = {
     paddingTop: 8,
     overflow: "auto",
     height: "inherit",
-    maxHeight: "calc(100% - 100px)"
+    maxHeight: "calc(100% - 56px)"
 };
