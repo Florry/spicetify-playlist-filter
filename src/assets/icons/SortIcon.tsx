@@ -1,6 +1,6 @@
 import React from "react";
 
-const FilterIcon = () => (
+const SortIcon = () => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		width="24"
@@ -17,4 +17,4 @@ const FilterIcon = () => (
 	</svg>
 );
 
-export default FilterIcon;
+export default SortIcon;

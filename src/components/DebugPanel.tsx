@@ -1,8 +1,10 @@
 import React from "react";
+import { SortOption } from "../constants/constants";
 import { useFilterContext } from "../context/context";
+import { sortItems } from "../utils/utils";
 
 const DebugPanel = () => {
-	const filterState = useFilterContext();
+	const { library, playlists, ...filterState } = useFilterContext();
 
 	return (
 		<pre style={{

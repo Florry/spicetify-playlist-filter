@@ -9,4 +9,7 @@ export type Item = {
     uri: string;
     addedAt: string;
     type: ItemType;
+
+    /** Client side for this extension only */
+    removed?: boolean;
 }

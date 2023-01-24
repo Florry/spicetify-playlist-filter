@@ -28,6 +28,6 @@ export interface Playlist extends Item {
     collaborators: Collaborator;
 }
 
-
-
-
+export function isPlaylist(x: Item): x is Playlist {
+    return x.type === ItemType.Playlist;
+}

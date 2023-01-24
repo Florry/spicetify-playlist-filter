@@ -6,8 +6,7 @@ import { FilterState, SortOption } from "../constants/constants";
 import { FilterContext } from "../context/context";
 import { Folder } from "../models/Folder";
 import { Playlist } from "../models/Playlist";
-import { flattenLibrary, getConfiguredKeyboardKeys, getOpenFolderState, sanitizeLibrary, sortItems } from "../utils/utils";
-import DebugPanel from "./DebugPanel";
+import { flattenLibrary as flattenLibraryUtil, getConfiguredKeyboardKeys, getOpenFolderState, sanitizeLibrary, sortItems } from "../utils/utils";
 import FolderItem, { folderIsDeadEnd, shouldRenderFolder } from "./FolderItem";
 import { PlaylistItem } from "./PlaylistItem";
 import SortOrderSelector from "./SortOrderSelector";
@@ -16,6 +15,7 @@ import { clearButtonStyling, searchInputStyling, searchStyling, ulStyling } from
 let searchInputElement: HTMLInputElement | null = null;
 
 // TODO: this file has become a mess, clean it up
+// TODO: ConfigContext should be used instead of getConfig so that changes to config are reflected immediately
 
 export function registerKeyboardShortcut() {
     Spicetify.Keyboard.registerImportantShortcut(getConfiguredKeyboardKeys(), async () => {
@@ -32,57 +32,85 @@ interface Props {
 }
 
 export const FilterInput = (({ onFilter }: Props) => {
+    const [playlists, setPlaylists] = useState<(Playlist | Folder)[]>([]);
+    const [library, setLibrary] = useState<(Playlist | Folder)[]>([]);
     const [filterTerm, setFilterTerm] = useState<string>("");
     const [currentlyPlayingUri, setCurrentlyPlayingUri] = useState<string>("");
     const [draggingSourceUri, setDraggingSourceUri] = useState<string>("");
     const [draggingSourceName, setDraggingSourceName] = useState<string>("");
     const [sortOption, setSortOption] = useState<SortOption>(getConfig(ConfigKey.DefaultSorting));
-    const [sortOptionWithoutFiltering, setSortOptionWithoutFiltering] = useState<SortOption>(SortOption.Custom);
-    const [isSortingWithoutFiltering, setSortingWithoutFiltering] = useState<boolean>(false);
+    const [librarySortOption, setLibrarySortOption] = useState<SortOption>(SortOption.Custom);
+    const [isSortingLibrary, setIsSortingLibrary] = useState<boolean>(false);
     const [openLibraryFolders, setOpenLibraryFolders] = useState<string[]>([]);
+    const [flattenLibrary, setFlattenLibrary] = useState<boolean>(false);
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
+    const [renamingUri, setRenamingUri] = useState("");
+    const [refreshLibrary, setRefreshLibrary] = useState(false);
 
     const filterState: FilterState = {
+        library,
+        playlists,
+
         filterTerm,
+
         currentlyPlayingUri,
+
         draggingSourceUri,
         draggingSourceName,
-        sortOption,
-        sortOptionWithoutFiltering,
-        isSortingWithoutFiltering,
-        openLibraryFolders,
-        isPlaying,
 
+        sortOption,
+        librarySortOption,
+        isSortingLibrary,
+        openLibraryFolders,
+        flattenLibrary,
+
+        isPlaying,
+        renamingUri,
+
+        setRenamingUri: setRenamingUri,
         onDraggingDropped: () => {
             setDraggingSourceUri("");
             setDraggingSourceName("");
-        }
+        },
+        refreshLibrary: () => setRefreshLibrary(true),
     }
 
     useEffect(() => {
-        if (!filterState.filterTerm.length && filterState.sortOptionWithoutFiltering !== SortOption.Custom) {
-            setSortingWithoutFiltering(true);
+        if (!filterTerm.length && librarySortOption !== SortOption.Custom) {
+            setIsSortingLibrary(true);
         } else {
-            setSortingWithoutFiltering(false);
+            setIsSortingLibrary(false);
         }
-    }, [filterState.filterTerm, filterState.sortOptionWithoutFiltering]);
+    }, [filterTerm, librarySortOption]);
 
-    const [playlists, setPlaylists] = useState<(Playlist | Folder)[]>([]);
-    const [library, setLibrary] = useState<(Playlist | Folder)[]>([]);
+
     const [playlistContainer, setPlaylistContainer] = useState(document.querySelector("#spicetify-playlist-list"));
 
-    const getPlaylists = async () => {
+    const loadAndPrepareLibrary = async () => {
+        console.log("loadAndPrepareLibrary");
         const library = await SpotifyClient.getLibrary();
-        const playlists = flattenLibrary(library);
+        const playlists = flattenLibraryUtil(library);
 
         setPlaylists(playlists);
 
-        if (getConfig(ConfigKey.FlattenLibraryWhenSortingOtherThanCustom)) {
+        if (getConfig(ConfigKey.FlattenLibraryWhenSortingOtherThanCustom) || flattenLibrary) {
             setLibrary(playlists);
         } else {
             setLibrary(sanitizeLibrary(library));
         }
+
+        if (getConfig(ConfigKey.UsePlaylistCovers)) {
+            SpotifyClient.getPlaylistImages();
+        }
     };
+
+    useEffect(() => {
+        if (refreshLibrary) {
+            /** Spotify's backend needs some time to process changes to the library it seems, e.g. it returns removed playlist if fetched right after remove request is successful🤔 */
+            setTimeout(loadAndPrepareLibrary, 700);
+            setRefreshLibrary(false);
+        }
+    }, [refreshLibrary]);
 
     const searchInput = useRef<HTMLInputElement>(null);
 
@@ -115,11 +143,7 @@ export const FilterInput = (({ onFilter }: Props) => {
     };
 
     useEffect(() => {
-        getPlaylists();
-
-        if (getConfig(ConfigKey.UsePlaylistCovers)) {
-            SpotifyClient.getPlaylistData();
-        }
+        loadAndPrepareLibrary();
 
         if (getConfig(ConfigKey.UseKeyboardShortcuts)) {
             /* A bit of a hack to be able to register/deregister shortcuts from config, but it will do */
@@ -127,13 +151,13 @@ export const FilterInput = (({ onFilter }: Props) => {
             registerKeyboardShortcut();
         }
 
-        const getPlaylistsInterval = setInterval(() => {
-            getPlaylists();
+        const playlistRefreshIntervalConfig = getConfig(ConfigKey.PlaylistListRefreshInterval);
 
-            if (!getConfig(ConfigKey.UsePlaylistCovers)) {
-                SpotifyClient.getPlaylistData();
-            }
-        }, getConfig(ConfigKey.PlaylistListRefreshInterval));
+        let getPlaylistsInterval: NodeJS.Timeout;
+
+        if (playlistRefreshIntervalConfig > 0) {
+            getPlaylistsInterval = setInterval(() => loadAndPrepareLibrary(), playlistRefreshIntervalConfig);
+        }
 
         const setCurrentPlayingPlaylistUri = () => {
             const currentlyPlayingPlaylistUri = Spicetify.Player.data.context_uri;
@@ -176,6 +200,10 @@ export const FilterInput = (({ onFilter }: Props) => {
 
         await setFilterTerm(value === " " ? "" : value);
 
+        if (!!value.length && !filterTerm.length) {
+            loadAndPrepareLibrary();
+        }
+
         if (value === "" || value === " ") {
             if (debounce && getConfig(ConfigKey.DebounceDefaultSorting)) {
                 setDebouncResetSortingToDefaultInterval(setTimeout(() => resetSorting(), getConfig(ConfigKey.SortingDebounceTime)));
@@ -205,7 +233,7 @@ export const FilterInput = (({ onFilter }: Props) => {
     }
 
     const clearFilter = async () => {
-        if (filterState.sortOptionWithoutFiltering === SortOption.Custom) {
+        if (librarySortOption === SortOption.Custom) {
             setSpotifyVanillaPlaylistListVisible(true);
         } else {
             setSpotifyVanillaPlaylistListVisible(false);
@@ -214,31 +242,65 @@ export const FilterInput = (({ onFilter }: Props) => {
         setFilterTerm("");
     };
 
-    const searchResults = useMemo(() => playlists.filter((playlist: (Playlist | Folder)) => {
-        return playlist.name?.toLowerCase().includes(filterState.filterTerm.toLowerCase());
+    const searchResults = useMemo(() => playlists.filter((item: (Playlist | Folder)) => {
+        if (filterTerm.includes(".*")) { // Regex light
+            const regex = new RegExp(filterTerm, "i");
+            return !item.removed && item.name?.toLowerCase().match(regex);
+        }
+
+        return !item.removed && item.name?.toLowerCase().includes(filterTerm.toLowerCase());
     })
-        .sort((a, b) => sortItems(a, b, filterState.filterTerm, filterState.sortOption)), [filterState.filterTerm, filterState.sortOption]);
+        .sort((a, b) => sortItems(a, b, filterTerm, sortOption)), [filterTerm, sortOption, playlists]);
 
 
     const changeSortOption = async (option: SortOption) => setSortOption(option);
 
     const changeLibrarySortOption = async (option: SortOption) => {
-        await setSortOptionWithoutFiltering(option);
+        const librarySortOptionBefore = librarySortOption;
 
-        if (option === SortOption.Custom) {
+        await setLibrarySortOption(option);
+
+        if (option === SortOption.Custom && !flattenLibrary) {
             setSpotifyVanillaPlaylistListVisible(true);
         } else {
+            if (librarySortOptionBefore === SortOption.Custom) {
+                loadAndPrepareLibrary();
+            }
+
             setOpenLibraryFolders(getOpenFolderState() as string[]);
             setSpotifyVanillaPlaylistListVisible(false);
         }
     };
 
-    const sortedLibrary = useMemo(() => library.sort((a, b) => sortItems(a, b, filterState.filterTerm, filterState.sortOptionWithoutFiltering)), [filterState.sortOptionWithoutFiltering]);
+    const changeFlattenLibraryOption = async (option: boolean) => {
+        await setFlattenLibrary(option);
 
-    const shouldDisplayFolders = (!isSortingWithoutFiltering
+        if (option) {
+            setSpotifyVanillaPlaylistListVisible(false);
+            setOpenLibraryFolders(getOpenFolderState() as string[]);
+            setSpotifyVanillaPlaylistListVisible(false);
+            loadAndPrepareLibrary();
+        } else {
+            setSpotifyVanillaPlaylistListVisible(true);
+        }
+    }
+
+    const sortedLibrary = useMemo(() => (flattenLibrary ? playlists : library)
+        .filter((item: (Playlist | Folder)) => !item.removed)
+        .sort((a, b) => sortItems(a, b, filterTerm, librarySortOption)), [librarySortOption, library, flattenLibrary]);
+
+    const shouldDisplayFolders = !flattenLibrary && ((!isSortingLibrary
         && getConfig(ConfigKey.IncludeFoldersInResult)) ||
-        (isSortingWithoutFiltering
-            && !getConfig(ConfigKey.FlattenLibraryWhenSortingOtherThanCustom));
+        (isSortingLibrary
+            && !getConfig(ConfigKey.FlattenLibraryWhenSortingOtherThanCustom)));
+
+    const shouldDisplaySorting = getConfig(ConfigKey.UseSortingForFilteringOnly) && getConfig(ConfigKey.UseSorting) ? !!filterTerm.length : getConfig(ConfigKey.UseSorting);
+    const shouldDisplayFlattenLibrary = getConfig(ConfigKey.UseFlattenLibraryForFilteringOnly) && getConfig(ConfigKey.UseFlattenLibrary) ? !!filterTerm.length : getConfig(ConfigKey.UseFlattenLibrary);
+
+    // TODO: 
+    if (getConfig(ConfigKey.HideFilteringWhenNotInUse)) {
+        return null;
+    }
 
     return (
         <>
@@ -279,11 +341,10 @@ export const FilterInput = (({ onFilter }: Props) => {
                     {
                         !!filterTerm.length &&
                         (
-                            <>
+                            <Spicetify.ReactComponent.TooltipWrapper label="Clear filter" showDelay={100}>
                                 <div
                                     id="playlist-filter-clear-btn"
                                     style={clearButtonStyling}
-                                    title="Clear filter"
                                     onClick={() => {
                                         resetSorting();
                                         clearFilter();
@@ -294,19 +355,38 @@ export const FilterInput = (({ onFilter }: Props) => {
                                         icon="x"
                                     />
                                 </div>
-                            </>
+                            </Spicetify.ReactComponent.TooltipWrapper>
                         )
                     }
 
                     {
-                        !!filterState.filterTerm.length
-                            ? <SortOrderSelector onChange={changeSortOption} filtering={true} />
-                            : <SortOrderSelector onChange={changeLibrarySortOption} filtering={false} />
+                        shouldDisplayFlattenLibrary ?
+                            <Spicetify.ReactComponent.TooltipWrapper label="Flatten library" showDelay={100}>
+                                <div
+                                    id="playlist-filter-clear-btn"
+                                    style={clearButtonStyling}
+                                    onClick={() => changeFlattenLibraryOption(!flattenLibrary)}
+                                >
+                                    <SpotifyIcon
+                                        style={{ fill: flattenLibrary ? "var(--spice-button-active)" : "var(--text-subdued)" }}
+                                        icon="library"
+                                    />
+                                </div>
+                            </Spicetify.ReactComponent.TooltipWrapper>
+                            : <></>
+                    }
+
+                    {
+                        shouldDisplaySorting ?
+                            !!filterTerm.length
+                                ? <SortOrderSelector onChange={changeSortOption} filtering={true} />
+                                : <SortOrderSelector onChange={changeLibrarySortOption} filtering={false} />
+                            : <></>
                     }
                 </div>
 
                 {
-                    (filterState.filterTerm || filterState.isSortingWithoutFiltering) &&
+                    (filterTerm || isSortingLibrary || flattenLibrary) &&
                     <>
                         <div
                             id="playlist-filter-results-divider-container"
@@ -325,15 +405,16 @@ export const FilterInput = (({ onFilter }: Props) => {
                             id="playlist-filter-results"
                             style={ulStyling}
                         >
-                            {(filterState.isSortingWithoutFiltering ? sortedLibrary : searchResults)
+                            {/* {((isSortingLibrary || flattenLibrary) ? sortedLibrary : searchResults) */}
+                            {(!isSortingLibrary || (!isSortingLibrary && flattenLibrary) ? searchResults : sortedLibrary)
                                 .map((item: any) => {
                                     if (item.type === "folder") {
-                                        const isDeadEnd = folderIsDeadEnd(item, filterState.filterTerm);
+                                        const isDeadEnd = folderIsDeadEnd(item, filterTerm);
 
-                                        if (shouldDisplayFolders && shouldRenderFolder(item, filterState.filterTerm)) {
+                                        if (shouldDisplayFolders && shouldRenderFolder(item, filterTerm)) {
                                             return (
                                                 <FolderItem
-                                                    searchTerm={filterState.filterTerm}
+                                                    searchTerm={filterTerm}
                                                     folder={item}
                                                     key={item.uri}
                                                     deadEnd={getConfig(ConfigKey.HideUnrelatedInFolders) ? isDeadEnd : false}
@@ -343,7 +424,7 @@ export const FilterInput = (({ onFilter }: Props) => {
                                     } else {
                                         return (
                                             <PlaylistItem
-                                                searchTerm={filterState.filterTerm}
+                                                searchTerm={filterTerm}
                                                 playlist={item}
                                                 key={item.uri}
                                             />

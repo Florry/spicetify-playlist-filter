@@ -7,10 +7,10 @@ const defaultState: FilterState = {
 	draggingSourceUri: "",
 	filterTerm: "",
 	isPlaying: false,
-	isSortingWithoutFiltering: false,
+	isSortingLibrary: false,
 	onDraggingDropped: () => { },
 	openLibraryFolders: [],
-	sortOptionWithoutFiltering: SortOption.Custom,
+	librarySortOption: SortOption.Custom,
 	sortOption: SortOption.Relevance,
 };
 

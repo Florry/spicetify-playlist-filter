@@ -71,6 +71,8 @@ declare namespace Spicetify {
         session_id: string;
         queue_revision: string;
     };
+
+
     namespace Player {
         /**
          * Register a listener `type` on Spicetify.Player.
@@ -1505,5 +1507,9 @@ declare namespace Spicetify {
         const color_scheme: string;
         const extensions: string[];
         const custom_apps: string[];
+    }
+
+    namespace Locale {
+        const _dictionary: Record<string, string>;
     }
 }

@@ -45,7 +45,7 @@ const ConfigModal = () => {
         switch (configItem.type) {
             case ConfigType.Input:
                 return <Input value={currentValue} setValue={setValue} options={configItem.options! as InputOptions} />;
-            case ConfigType.Checkbox:
+            case ConfigType.Toggle:
                 return <Checkbox value={currentValue} setValue={setValue} />;
             case ConfigType.Select:
                 return <Select value={currentValue} setValue={setValue} options={configItem.options! as SelectOptions} />;
@@ -63,6 +63,7 @@ const ConfigModal = () => {
     const resetToDefault = () => {
         resetConfigToDefault();
         refreshState();
+        setNeedsToReload(true);
     };
 
     return (
@@ -98,27 +99,27 @@ const ConfigModal = () => {
                         >
                             Playlist filter config
                         </h1>
-
-                        <button
-                            onClick={close}
-                            aria-label="Close"
-                            className="main-trackCreditsModal-closeBtn"
-                        >
-                            <svg
-                                width="18"
-                                height="18"
-                                viewBox="0 0 32 32"
-                                xmlns="http://www.w3.org/2000/svg"
+                        <Spicetify.ReactComponent.TooltipWrapper label="Save / Close" showDelay={100}>
+                            <button
+                                onClick={close}
+                                aria-label="Close"
+                                className="main-trackCreditsModal-closeBtn"
                             >
-                                <title>Close</title>
+                                <svg
+                                    width="18"
+                                    height="18"
+                                    viewBox="0 0 32 32"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                >
 
-                                <path
-                                    d="M31.098 29.794L16.955 15.65 31.097 1.51 29.683.093 15.54 14.237 1.4.094-.016 1.508 14.126 15.65-.016 29.795l1.414 1.414L15.54 17.065l14.144 14.143"
-                                    fill="currentColor"
-                                    fill-rule="evenodd"
-                                />
-                            </svg>
-                        </button>
+                                    <path
+                                        d="M31.098 29.794L16.955 15.65 31.097 1.51 29.683.093 15.54 14.237 1.4.094-.016 1.508 14.126 15.65-.016 29.795l1.414 1.414L15.54 17.065l14.144 14.143"
+                                        fill="currentColor"
+                                        fill-rule="evenodd"
+                                    />
+                                </svg>
+                            </button>
+                        </Spicetify.ReactComponent.TooltipWrapper>
                     </div>
                     <div
                         className="main-trackCreditsModal-mainSection"
@@ -152,7 +153,12 @@ const ConfigModal = () => {
                                                                         }
                                                                     </>
                                                                     : (
-                                                                        <div className="x-settings-row">
+                                                                        <div
+                                                                            className="x-settings-row"
+                                                                            style={{
+                                                                                marginLeft: configItem.subKeyOf ? 15 : 0
+                                                                            }}
+                                                                        >
                                                                             <div className="x-settings-firstColumn"
                                                                                 style={{
                                                                                     display: "block"

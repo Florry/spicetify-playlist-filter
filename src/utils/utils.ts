@@ -1,6 +1,6 @@
 import { SpotifyClient } from "../clients/SpotifyClient";
 import { getConfig, ConfigKey, ModifierKey } from "../config/Config";
-import { SortOption } from "../constants/constants";
+import { LocaleKey, SortOption } from "../constants/constants";
 import { getImageUrlByPlaylistUri } from "../data/imageUrlRepo";
 import { Folder } from "../models/Folder";
 import { Item, ItemType } from "../models/Item";
@@ -103,6 +103,10 @@ export function sortItems(a: Playlist | Folder, b: Playlist | Folder, searchTerm
             return sortByName() * -1;
         case SortOption.Custom:
             return 0;
+        case SortOption.AddedAsc:
+            return sortByAddedAsc();
+        case SortOption.AddedDesc:
+            return sortByAddedDesc();
     }
 
     function sortByRelevance() {
@@ -137,6 +141,44 @@ export function sortItems(a: Playlist | Folder, b: Playlist | Folder, searchTerm
 
     function sortByName() {
         return a.name?.toLowerCase().localeCompare(b.name?.toLowerCase() || "") || 0;
+    }
+
+    function sortByAddedAsc() {
+        const aDate = new Date(a.addedAt || 0);
+        const bDate = new Date(b.addedAt || 0);
+
+        if (aDate.getTime() === bDate.getTime()) {
+            return sortByName();
+        }
+
+        if (aDate > bDate) {
+            return 1;
+        }
+        else if (aDate < bDate) {
+            return -1;
+        }
+        else {
+            return 0;
+        }
+    }
+
+    function sortByAddedDesc() {
+        const aDate = new Date(a.addedAt || 0);
+        const bDate = new Date(b.addedAt || 0);
+
+        if (aDate.getTime() === bDate.getTime()) {
+            return sortByName();
+        }
+
+        if (aDate > bDate) {
+            return -1;
+        }
+        else if (aDate < bDate) {
+            return 1;
+        }
+        else {
+            return 0;
+        }
     }
 }
 
@@ -213,7 +255,7 @@ export async function getPlaylistArtwork(playlistUri: string) {
                     }
                 }
             } else if (!SpotifyClient.loading.get("getPlaylistData")) {
-                SpotifyClient.getPlaylistData();
+                SpotifyClient.getPlaylistImages();
             }
         }, 100);
     });
@@ -229,4 +271,8 @@ export function currentPageIsPlaylist(playlistUri: string) {
 export function currentPageIsFolder(folderUri: string) {
     // return Spicetify.Platform.History.location.pathname === "/folder/" + folderUri.replace("spotify:folder:", "");
     return false;
+}
+
+export function getLocale(key: LocaleKey) {
+    return Spicetify.Locale._dictionary[key];
 }

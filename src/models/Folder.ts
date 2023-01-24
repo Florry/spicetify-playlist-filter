@@ -8,3 +8,7 @@ export interface Folder extends Item {
     name: string;
     uri: string;
 }
+
+export function isFolder(x: Item): x is Folder {
+    return x.type === ItemType.Folder;
+}

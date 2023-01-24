@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import FilterIcon from "../assets/icons/SortIcon";
+import SortIcon from "../assets/icons/SortIcon";
 import SpotifyIcon from "../assets/icons/SpotifyIcon";
 import { SortOption } from "../constants/constants";
 import { SORT_LANG } from "../constants/language";
@@ -14,13 +14,17 @@ const filteringMenuOptions: SortMenuOptions = [
     { value: SortOption.Relevance },
     { value: SortOption.Custom },
     { value: SortOption.NameAsc },
-    { value: SortOption.NameDesc }
+    { value: SortOption.NameDesc },
+    { value: SortOption.AddedDesc },
+    { value: SortOption.AddedAsc }
 ];
 
 const standardMenuOptions: SortMenuOptions = [
     { value: SortOption.Custom },
     { value: SortOption.NameAsc },
-    { value: SortOption.NameDesc }
+    { value: SortOption.NameDesc },
+    { value: SortOption.AddedDesc },
+    { value: SortOption.AddedAsc }
 ];
 
 interface Props {
@@ -29,7 +33,7 @@ interface Props {
 }
 
 const SortOrderSelector = ({ onChange, filtering }: Props) => {
-    const { sortOption, sortOptionWithoutFiltering } = useFilterContext();
+    const { sortOption, librarySortOption: sortOptionWithoutFiltering } = useFilterContext();
     const [showSortMenu, setShowSortMenu] = useState(false);
     const toggleSortMenu = async () => setShowSortMenu(!showSortMenu);
 
@@ -39,15 +43,14 @@ const SortOrderSelector = ({ onChange, filtering }: Props) => {
     }
 
     return (
-        <>
+        <Spicetify.ReactComponent.TooltipWrapper label="Sorting" showDelay={100}>
             <div
                 id="playlist-filter-clear-btn"
                 style={clearButtonStyling}
-                title="Sorting"
                 onMouseOver={() => setShowSortMenu(true)}
                 onMouseLeave={() => setShowSortMenu(false)}
             >
-                <FilterIcon />
+                <SortIcon />
                 {
                     showSortMenu &&
                     (
@@ -88,17 +91,24 @@ const SortOrderSelector = ({ onChange, filtering }: Props) => {
                                                             alignItems: "center",
                                                         }}
                                                     >
-                                                        <div>{SORT_LANG[option.value]}</div>
-                                                        {(filtering ? option.value === sortOption : option.value === sortOptionWithoutFiltering) && (
-                                                            <div
-                                                                style={{
-                                                                    marginLeft: 7,
-                                                                    marginTop: 7
-                                                                }}
-                                                            >
-                                                                <SpotifyIcon icon="check" height="24px" width="24px" fill="" />
-                                                            </div>
-                                                        )}
+                                                        {/* // first div should be aligned to the left and the second div to the right */}
+                                                        <div
+                                                            style={{
+                                                                flex: 1,
+                                                            }}
+                                                        >{SORT_LANG[option.value]}</div>
+
+                                                        <div
+                                                            style={{
+                                                                marginLeft: 7,
+                                                                marginTop: 7,
+                                                                flex: 0,
+                                                                opacity: (filtering ? option.value === sortOption : option.value === sortOptionWithoutFiltering) ? 1 : 0,
+                                                            }}
+                                                        >
+                                                            <SpotifyIcon icon="check" height="24px" width="24px" fill="" />
+                                                        </div>
+
                                                     </div>
                                                 </button>
                                             </li>
@@ -110,7 +120,7 @@ const SortOrderSelector = ({ onChange, filtering }: Props) => {
                     )
                 }
             </div>
-        </>
+        </Spicetify.ReactComponent.TooltipWrapper>
     );
 };
 
