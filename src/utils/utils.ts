@@ -48,6 +48,7 @@ export function getNameWithHighlightedSearchTerm(name: string, searchTerm: strin
     if (searchTerm === "")
         return name;
     else {
+        // TODO: sanitize input to prevent regex crashes
         let highlightedName = name.replace(new RegExp(searchTerm, "gi"), (match: string) => {
             return `<span class="playlist-filter-results-highlight" style="background-color: rgb(255 255 255 / 8%); color: #fff;">${match}</span>`;
         });

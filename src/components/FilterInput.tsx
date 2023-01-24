@@ -243,6 +243,7 @@ export const FilterInput = (({ onFilter }: Props) => {
     };
 
     const searchResults = useMemo(() => playlists.filter((item: (Playlist | Folder)) => {
+        // TODO: sanitize input to prevent regex crashes
         if (filterTerm.includes(".*")) { // Regex light
             const regex = new RegExp(filterTerm, "i");
             return !item.removed && item.name?.toLowerCase().match(regex);
