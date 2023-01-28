@@ -1,5 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import ConfigContextProvider from "./components/ConfigContextProvider";
 import { FilterInput } from "./components/FilterInput";
 import { registerSubMenues } from "./menues/subMenues";
 
@@ -19,7 +20,11 @@ async function main() {
             div.setAttribute("style", "height: 100%; max-height: 100%;");
     };
 
-    ReactDOM.render(<FilterInput onFilter={onFilter} />, div);
+    ReactDOM.render(
+        <ConfigContextProvider>
+            <FilterInput onFilter={onFilter} />
+        </ConfigContextProvider>,
+        div);
 
     sidebarItem.parentNode!.insertBefore(div, sidebarItem);
 

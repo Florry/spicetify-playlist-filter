@@ -3,7 +3,7 @@ import CollaborativeIcon from "../assets/icons/CollaborativeIcon";
 import { SpotifyClient } from "../clients/SpotifyClient";
 import { ConfigKey, getConfig } from "../config/Config";
 import { LocaleKey } from "../constants/constants";
-import { useFilterContext } from "../context/context";
+import { useConfigContext, useFilterContext } from "../context/context";
 import { Playlist } from "../models/Playlist";
 import { currentPageIsPlaylist, getNameWithHighlightedSearchTerm, getPlaylistArtwork, startPlaybackFromItem } from "../utils/utils";
 import NowPlayingIndicator from "./NowPlayingIndicator";
@@ -19,6 +19,7 @@ interface Props {
 }
 
 export const PlaylistItem = ({ playlist, searchTerm, indentation = -2 }: Props) => {
+    const { config } = useConfigContext();
     const { currentlyPlayingUri: currentlyPlayingUri, draggingSourceUri, onDraggingDropped, renamingUri, setRenamingUri } = useFilterContext();
 
     const [img, setImg] = useState<string>(playlist.images.length > 0 ? playlist.images[0].url : "");
@@ -35,7 +36,7 @@ export const PlaylistItem = ({ playlist, searchTerm, indentation = -2 }: Props) 
         }
     };
     useEffect(() => {
-        if (getConfig(ConfigKey.UsePlaylistCovers)) {
+        if (config[ConfigKey.UsePlaylistCovers]) {
             getPlaylistArtwork(playlist.uri).then((img) => setImg(img as string));
         }
     }, []);
@@ -85,7 +86,7 @@ export const PlaylistItem = ({ playlist, searchTerm, indentation = -2 }: Props) 
         }
     };
 
-    const usePlaylistCovers = useMemo(() => getConfig(ConfigKey.UsePlaylistCovers), []);
+    const usePlaylistCovers = config[ConfigKey.UsePlaylistCovers];
 
     useEffect(() => {
         outerRef.current?.classList.remove("GlueDropTarget--active");

@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useState } from "react";
 import { ConfigKey, getConfig } from "../config/Config";
-import { useFilterContext } from "../context/context";
+import { useConfigContext, useFilterContext } from "../context/context";
 import { getNameWithHighlightedSearchTerm } from "../utils/utils";
 import { listItemStyling, mainRootlistItemRootlistItemStyling } from "./styling/PlaylistItemStyling";
 
@@ -17,6 +17,7 @@ interface Props {
 }
 
 const ListItem = ({ onDrop, onClick, onDoubleClick, name, href, imageComponent, isOwnedBySelf, indentation, children }: Props) => {
+    const { config } = useConfigContext();
     const { draggingSourceUri, filterTerm } = useFilterContext();
     const [dragDepth, setDragDepth] = useState(0);
 
@@ -53,7 +54,7 @@ const ListItem = ({ onDrop, onClick, onDoubleClick, name, href, imageComponent, 
         }
     };
 
-    const usePlaylistCovers = useMemo(() => getConfig(ConfigKey.UsePlaylistCovers), []);
+    const usePlaylistCovers = config[ConfigKey.UsePlaylistCovers];
 
     return (
         <>

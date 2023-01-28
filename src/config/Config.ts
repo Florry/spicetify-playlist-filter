@@ -44,6 +44,8 @@ export const defaultConfig = {
     [ConfigKey.HideFilteringWhenNotInUse]: false,
 };
 
+export type Config = typeof defaultConfig;
+
 const _config: Record<ConfigKey, any> = {
     ...defaultConfig
 };

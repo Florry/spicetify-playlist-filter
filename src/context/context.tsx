@@ -1,19 +1,10 @@
 import { createContext, useContext } from "react";
-import { FilterState, SortOption } from "../constants/constants";
+import { ConfigState, FilterState } from "../constants/constants";
 
-const defaultState: FilterState = {
-	currentlyPlayingUri: "",
-	draggingSourceName: "",
-	draggingSourceUri: "",
-	filterTerm: "",
-	isPlaying: false,
-	isSortingLibrary: false,
-	onDraggingDropped: () => { },
-	openLibraryFolders: [],
-	librarySortOption: SortOption.Custom,
-	sortOption: SortOption.Relevance,
-};
-
-export const FilterContext = createContext(defaultState);
+export const FilterContext = createContext({} as FilterState);
 
 export const useFilterContext = () => useContext(FilterContext);
+
+export const ConfigContext = createContext({} as ConfigState);
+
+export const useConfigContext = () => useContext(ConfigContext);

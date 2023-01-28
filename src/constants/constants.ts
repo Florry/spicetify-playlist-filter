@@ -1,3 +1,4 @@
+import { Config, ConfigKey } from "../config/Config";
 import { Folder } from "../models/Folder";
 import { Playlist } from "../models/Playlist";
 
@@ -29,6 +30,13 @@ export type FilterState = {
     onDraggingDropped: () => void;
     setRenamingUri: (playlistUri: string) => void;
     refreshLibrary: () => void;
+}
+
+export type ConfigState = {
+    config: Config,
+    setConfig: (key: ConfigKey, value: any) => void;
+    toggleConfig: (key: ConfigKey) => void;
+    resetConfigToDefault: () => void;
 }
 
 export enum LocaleKey {

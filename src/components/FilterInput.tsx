@@ -1,18 +1,22 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import SpotifyIcon from "../assets/icons/SpotifyIcon";
 import { SpotifyClient } from "../clients/SpotifyClient";
-import { ConfigKey, getConfig } from "../config/Config";
+import { ConfigKey, /** getConfig*/ } from "../config/Config";
 import { FilterState, SortOption } from "../constants/constants";
-import { FilterContext } from "../context/context";
+import { FilterContext, useConfigContext } from "../context/context";
 import { Folder } from "../models/Folder";
 import { Playlist } from "../models/Playlist";
 import { flattenLibrary as flattenLibraryUtil, getConfiguredKeyboardKeys, getOpenFolderState, sanitizeLibrary, sortItems } from "../utils/utils";
+import DebugPanel from "./DebugPanel";
 import FolderItem, { folderIsDeadEnd, shouldRenderFolder } from "./FolderItem";
 import { PlaylistItem } from "./PlaylistItem";
 import SortOrderSelector from "./SortOrderSelector";
 import { clearButtonStyling, searchInputStyling, searchStyling, ulStyling } from "./styling/PlaylistFilterStyling";
 
 let searchInputElement: HTMLInputElement | null = null;
+
+/** Hack to be able to get config context in decoupled components, e.g. ConfigModal which is rendered on its own */
+export let mainConfigContext: any;
 
 // TODO: this file has become a mess, clean it up
 // TODO: ConfigContext should be used instead of getConfig so that changes to config are reflected immediately
@@ -32,13 +36,18 @@ interface Props {
 }
 
 export const FilterInput = (({ onFilter }: Props) => {
+    const configContext = useConfigContext();
+    const { config } = configContext;
+
+    mainConfigContext = configContext
+
     const [playlists, setPlaylists] = useState<(Playlist | Folder)[]>([]);
     const [library, setLibrary] = useState<(Playlist | Folder)[]>([]);
     const [filterTerm, setFilterTerm] = useState<string>("");
     const [currentlyPlayingUri, setCurrentlyPlayingUri] = useState<string>("");
     const [draggingSourceUri, setDraggingSourceUri] = useState<string>("");
     const [draggingSourceName, setDraggingSourceName] = useState<string>("");
-    const [sortOption, setSortOption] = useState<SortOption>(getConfig(ConfigKey.DefaultSorting));
+    const [sortOption, setSortOption] = useState<SortOption>(config[ConfigKey.DefaultSorting]);
     const [librarySortOption, setLibrarySortOption] = useState<SortOption>(SortOption.Custom);
     const [isSortingLibrary, setIsSortingLibrary] = useState<boolean>(false);
     const [openLibraryFolders, setOpenLibraryFolders] = useState<string[]>([]);
@@ -76,12 +85,12 @@ export const FilterInput = (({ onFilter }: Props) => {
     }
 
     useEffect(() => {
-        if (!filterTerm.length && librarySortOption !== SortOption.Custom) {
+        if (!filterTerm.length && librarySortOption !== SortOption.Custom || !filterTerm.length && flattenLibrary) {
             setIsSortingLibrary(true);
         } else {
             setIsSortingLibrary(false);
         }
-    }, [filterTerm, librarySortOption]);
+    }, [filterTerm, librarySortOption, flattenLibrary]);
 
 
     const [playlistContainer, setPlaylistContainer] = useState(document.querySelector("#spicetify-playlist-list"));
@@ -93,13 +102,13 @@ export const FilterInput = (({ onFilter }: Props) => {
 
         setPlaylists(playlists);
 
-        if (getConfig(ConfigKey.FlattenLibraryWhenSortingOtherThanCustom) || flattenLibrary) {
+        if (config[ConfigKey.FlattenLibraryWhenSortingOtherThanCustom] || flattenLibrary) {
             setLibrary(playlists);
         } else {
             setLibrary(sanitizeLibrary(library));
         }
 
-        if (getConfig(ConfigKey.UsePlaylistCovers)) {
+        if (config[ConfigKey.UsePlaylistCovers]) {
             SpotifyClient.getPlaylistImages();
         }
     };
@@ -145,13 +154,13 @@ export const FilterInput = (({ onFilter }: Props) => {
     useEffect(() => {
         loadAndPrepareLibrary();
 
-        if (getConfig(ConfigKey.UseKeyboardShortcuts)) {
+        if (config[ConfigKey.UseKeyboardShortcuts]) {
             /* A bit of a hack to be able to register/deregister shortcuts from config, but it will do */
             searchInputElement = searchInput.current;
             registerKeyboardShortcut();
         }
 
-        const playlistRefreshIntervalConfig = getConfig(ConfigKey.PlaylistListRefreshInterval);
+        const playlistRefreshIntervalConfig = config[ConfigKey.PlaylistListRefreshInterval];
 
         let getPlaylistsInterval: NodeJS.Timeout;
 
@@ -189,7 +198,7 @@ export const FilterInput = (({ onFilter }: Props) => {
         }
     }, []);
 
-    const resetSorting = () => setSortOption(getConfig(ConfigKey.DefaultSorting));
+    const resetSorting = () => setSortOption(config[ConfigKey.DefaultSorting]);
 
     const [debouncResetSortingToDefaultInterval, setDebouncResetSortingToDefaultInterval] = useState<NodeJS.Timeout | null>(null);
 
@@ -205,8 +214,8 @@ export const FilterInput = (({ onFilter }: Props) => {
         }
 
         if (value === "" || value === " ") {
-            if (debounce && getConfig(ConfigKey.DebounceDefaultSorting)) {
-                setDebouncResetSortingToDefaultInterval(setTimeout(() => resetSorting(), getConfig(ConfigKey.SortingDebounceTime)));
+            if (debounce && config[ConfigKey.DebounceDefaultSorting]) {
+                setDebouncResetSortingToDefaultInterval(setTimeout(() => resetSorting(), config[ConfigKey.SortingDebounceTime]));
             } else {
                 resetSorting();
             }
@@ -291,21 +300,22 @@ export const FilterInput = (({ onFilter }: Props) => {
         .sort((a, b) => sortItems(a, b, filterTerm, librarySortOption)), [librarySortOption, library, flattenLibrary]);
 
     const shouldDisplayFolders = !flattenLibrary && ((!isSortingLibrary
-        && getConfig(ConfigKey.IncludeFoldersInResult)) ||
+        && config[ConfigKey.IncludeFoldersInResult]) ||
         (isSortingLibrary
-            && !getConfig(ConfigKey.FlattenLibraryWhenSortingOtherThanCustom)));
+            && !config[ConfigKey.FlattenLibraryWhenSortingOtherThanCustom]));
 
-    const shouldDisplaySorting = getConfig(ConfigKey.UseSortingForFilteringOnly) && getConfig(ConfigKey.UseSorting) ? !!filterTerm.length : getConfig(ConfigKey.UseSorting);
-    const shouldDisplayFlattenLibrary = getConfig(ConfigKey.UseFlattenLibraryForFilteringOnly) && getConfig(ConfigKey.UseFlattenLibrary) ? !!filterTerm.length : getConfig(ConfigKey.UseFlattenLibrary);
+    const shouldDisplaySorting = config[ConfigKey.UseSortingForFilteringOnly] && config[ConfigKey.UseSorting] ? !!filterTerm.length : config[ConfigKey.UseSorting];
+    const shouldDisplayFlattenLibrary = config[ConfigKey.UseFlattenLibraryForFilteringOnly] && config[ConfigKey.UseFlattenLibrary] ? !!filterTerm.length : config[ConfigKey.UseFlattenLibrary];
 
     // TODO: 
-    if (getConfig(ConfigKey.HideFilteringWhenNotInUse)) {
+    if (config[ConfigKey.HideFilteringWhenNotInUse]) {
         return null;
     }
 
     return (
         <>
             <FilterContext.Provider value={filterState}>
+                {/* <DebugPanel /> */}
                 <div
                     id="playlist-filter-main-container"
                     className="main-navBar-navBarItem"
@@ -412,13 +422,13 @@ export const FilterInput = (({ onFilter }: Props) => {
                                     if (item.type === "folder") {
                                         const isDeadEnd = folderIsDeadEnd(item, filterTerm);
 
-                                        if (shouldDisplayFolders && shouldRenderFolder(item, filterTerm)) {
+                                        if (shouldDisplayFolders && shouldRenderFolder(item, filterTerm, config)) {
                                             return (
                                                 <FolderItem
                                                     searchTerm={filterTerm}
                                                     folder={item}
                                                     key={item.uri}
-                                                    deadEnd={getConfig(ConfigKey.HideUnrelatedInFolders) ? isDeadEnd : false}
+                                                    deadEnd={config[ConfigKey.HideUnrelatedInFolders] ? isDeadEnd : false}
                                                 />
                                             );
                                         }

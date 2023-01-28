@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import SpotifyIcon from "../assets/icons/SpotifyIcon";
 import { SpotifyClient } from '../clients/SpotifyClient';
-import { ConfigKey, getConfig } from "../config/Config";
+import { Config, ConfigKey, getConfig } from "../config/Config";
 import { LocaleKey } from "../constants/constants";
-import { useFilterContext } from "../context/context";
+import { useConfigContext, useFilterContext } from "../context/context";
 import { Folder } from "../models/Folder";
 import { ItemType } from "../models/Item";
 import { Playlist } from "../models/Playlist";
@@ -24,6 +24,7 @@ interface Props {
 }
 
 const FolderItem = ({ searchTerm, folder, indentation = 0, deadEnd, recursiveOpen }: Props) => {
+    const { config } = useConfigContext();
     const {
         sortOption,
         librarySortOption,
@@ -59,13 +60,13 @@ const FolderItem = ({ searchTerm, folder, indentation = 0, deadEnd, recursiveOpe
         e?.preventDefault();
 
         if (folderIsOpen) {
-            if (getConfig(ConfigKey.SyncOpeningFoldersBetweenSorting)) {
+            if (config[ConfigKey.SyncOpeningFoldersBetweenSorting]) {
                 setFolderOpenState(folder.uri, false);
             }
 
             setFolderIsOpen(false);
         } else {
-            if (getConfig(ConfigKey.SyncOpeningFoldersBetweenSorting)) {
+            if (config[ConfigKey.SyncOpeningFoldersBetweenSorting]) {
                 setFolderOpenState(folder.uri, true);
             }
 
@@ -224,7 +225,7 @@ const FolderItem = ({ searchTerm, folder, indentation = 0, deadEnd, recursiveOpe
                                 draggable="false"
                             >
                                 {
-                                    getConfig(ConfigKey.UsePlaylistCovers) && (
+                                    config[ConfigKey.UsePlaylistCovers] && (
                                         <SpotifyIcon
                                             height="1.5em"
                                             width="1.5em"
@@ -300,7 +301,7 @@ const FolderItem = ({ searchTerm, folder, indentation = 0, deadEnd, recursiveOpe
                             sortedItems
                                 .map((item, i) => {
                                     if (item.type === ItemType.Folder) {
-                                        if (shouldRenderFolder(item, searchTerm)) {
+                                        if (shouldRenderFolder(item, searchTerm, config)) {
                                             const isDeadEnd = folderIsDeadEnd(item, searchTerm);
 
                                             return (
@@ -309,13 +310,13 @@ const FolderItem = ({ searchTerm, folder, indentation = 0, deadEnd, recursiveOpe
                                                     folder={item}
                                                     key={item.uri + folder.uri}
                                                     indentation={indentation + 1}
-                                                    deadEnd={getConfig(ConfigKey.HideUnrelatedInFolders) ? isDeadEnd : false}
-                                                    recursiveOpen={getConfig(ConfigKey.OpenFoldersRecursively) ? folderContainsImmediateResult(folder, searchTerm) : false}
+                                                    deadEnd={config[ConfigKey.HideUnrelatedInFolders] ? isDeadEnd : false}
+                                                    recursiveOpen={config[ConfigKey.OpenFoldersRecursively] ? folderContainsImmediateResult(folder, searchTerm) : false}
                                                 />
                                             );
                                         }
                                     } else if (item.type === ItemType.Playlist) {
-                                        if (shouldRenderPlaylist(item, searchTerm)) {
+                                        if (shouldRenderPlaylist(item, searchTerm, config)) {
                                             return (
                                                 <PlaylistItem
                                                     searchTerm={searchTerm}
@@ -335,8 +336,8 @@ const FolderItem = ({ searchTerm, folder, indentation = 0, deadEnd, recursiveOpe
 
 export default FolderItem;
 
-export function shouldRenderFolder(folder: Folder, searchTerm: string) {
-    if (getConfig(ConfigKey.HideUnrelatedInFolders)) {
+export function shouldRenderFolder(folder: Folder, searchTerm: string, config: Config) {
+    if (config[ConfigKey.HideUnrelatedInFolders]) {
         const containsSearchTerm = folderItemsContainsSearchTerm(folder, searchTerm);
 
         return folder.name?.toLowerCase().includes(searchTerm.toLowerCase()) || containsSearchTerm;
@@ -345,8 +346,8 @@ export function shouldRenderFolder(folder: Folder, searchTerm: string) {
     }
 }
 
-function shouldRenderPlaylist(playlist: Playlist, searchTerm: string) {
-    if (getConfig(ConfigKey.HideUnrelatedInFolders)) {
+function shouldRenderPlaylist(playlist: Playlist, searchTerm: string, config: Config) {
+    if (config[ConfigKey.HideUnrelatedInFolders]) {
         return playlist.name?.toLowerCase().includes(searchTerm.toLowerCase());
     } else {
         return true;

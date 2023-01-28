@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import ReactDOM from "react-dom";
-import { ConfigItem, configItems as configItemsImport, ConfigKey, ConfigType, getConfigObject, InputOptions, resetConfigToDefault, SelectOptions, setConfig } from "../../config/Config";
+import { ConfigItem, configItems as configItemsImport, ConfigType, getConfigObject, InputOptions, SelectOptions } from "../../config/Config";
+import { ConfigContext, useConfigContext } from "../../context/context";
+import { mainConfigContext } from "../FilterInput";
 import Checkbox from "./Checkbox";
 import Input from "./Input";
 import Select from "./Select";
@@ -8,21 +10,18 @@ import Select from "./Select";
 // TODO: fix all elements and stylings proper
 
 const ConfigModal = () => {
-    const [configState, setConfigState] = useState(getConfigObject());
+    const { config, setConfig, resetConfigToDefault } = useConfigContext();
+    const [configState, setConfigState] = useState(config);
     const [configItems, setConfigItems] = useState(configItemsImport);
     const [needsToReload, setNeedsToReload] = useState(false);
 
     const refreshState = () => {
-        setConfigState(getConfigObject());
         setConfigItems(configItemsImport);
-    };
-
-    const getConfig = (key: ConfigKey) => {
-        return configState[key];
+        setConfigState(getConfigObject());
     }
 
     const getConfigComponent = (configItem: ConfigItem) => {
-        const currentValue = getConfig(configItem.key);
+        const currentValue = configState[configItem.key];
 
         const setValue = (newValue: any) => {
             if (newValue === "") {
@@ -44,11 +43,11 @@ const ConfigModal = () => {
 
         switch (configItem.type) {
             case ConfigType.Input:
-                return <Input value={currentValue} setValue={setValue} options={configItem.options! as InputOptions} />;
+                return <Input value={currentValue as any} setValue={setValue} options={configItem.options! as InputOptions} />;
             case ConfigType.Toggle:
-                return <Checkbox value={currentValue} setValue={setValue} />;
+                return <Checkbox value={currentValue as any} setValue={setValue} />;
             case ConfigType.Select:
-                return <Select value={currentValue} setValue={setValue} options={configItem.options! as SelectOptions} />;
+                return <Select value={currentValue as any} setValue={setValue} options={configItem.options! as SelectOptions} />;
         }
     }
 
@@ -135,7 +134,7 @@ const ConfigModal = () => {
                                             >
                                                 {
                                                     section
-                                                        .filter(config => !config.subKeyOf || getConfig(config.subKeyOf))
+                                                        .filter(configItem => !configItem.subKeyOf || configState[configItem.subKeyOf])
                                                         .map(configItem => {
                                                             return (
                                                                 configItem.type === ConfigType.Title ?
@@ -222,7 +221,7 @@ export function openConfigModal() {
 
     div.setAttribute("class", "ReactModalPortal");
 
-    ReactDOM.render(<ConfigModal />, div);
+    ReactDOM.render(<ConfigContext.Provider value={mainConfigContext}><ConfigModal /></ConfigContext.Provider>, div);
 
     if (body) {
         modalElement = body.appendChild(div);
