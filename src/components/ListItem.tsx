@@ -1,5 +1,5 @@
-import React, { useMemo, useRef, useState } from "react";
-import { ConfigKey, getConfig } from "../config/Config";
+import React, { useRef, useState } from "react";
+import { ConfigKey } from "../config/Config";
 import { useConfigContext, useFilterContext } from "../context/context";
 import { getNameWithHighlightedSearchTerm } from "../utils/utils";
 import { listItemStyling, mainRootlistItemRootlistItemStyling } from "./styling/PlaylistItemStyling";

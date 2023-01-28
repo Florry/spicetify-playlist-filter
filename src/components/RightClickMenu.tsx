@@ -5,23 +5,6 @@ import { LocaleKey } from "../constants/constants";
 import { FilterContext, useFilterContext } from "../context/context";
 import { getLocale } from "../utils/utils";
 
-// const RIGHTCLICKMENU_ID = "playlistfilter:rightclickmenu";
-
-// const closeMenu = () => {
-//     clickOutside();
-//     document.removeEventListener("contextmenu", clickOutside);
-//     document.removeEventListener("click", clickOutside);
-// };
-
-// const clickOutside = () => {
-//     const menu = document.getElementById(RIGHTCLICKMENU_ID);
-
-//     if (menu) {
-//         ReactDOM.unmountComponentAtNode(menu);
-//         menu.remove();
-//     }
-// };
-
 type MenuOption = {
     key: LocaleKey;
     onClick: () => void;
@@ -42,22 +25,6 @@ const RightClickMenu = ({ children, uri, playlistName, isOwnedBySelf, isFolder }
     const openMenu = (e: React.MouseEvent, handleContextMenu: (e: React.MouseEvent) => void) => {
         e.preventDefault();
         e.stopPropagation();
-        // closeMenu();
-
-        // e.preventDefault();
-
-        // const div = document.createElement("div");
-        // div.setAttribute("class", "ReactModalPortal");
-        // div.setAttribute("id", RIGHTCLICKMENU_ID);
-
-        // ReactDOM.render(<FilterContext.Provider value={filterContext}><Menu uri={uri} position={{ x: e.clientX, y: e.clientY }} isOwnedBySelf={isOwnedBySelf} close={closeMenu} /></FilterContext.Provider>, div);
-
-        // document.querySelector("body")?.prepend(div);
-
-        // setImmediate(() => {
-        //     document.addEventListener("contextmenu", clickOutside);
-        //     document.addEventListener("click", clickOutside);
-        // });
 
         handleContextMenu?.(e);
 
@@ -106,17 +73,6 @@ const RightClickMenu = ({ children, uri, playlistName, isOwnedBySelf, isFolder }
             }
         />
     );
-
-
-    // return (<Spicetify.ReactComponent.RightClickMenu
-    //     menu={<Spicetify.ReactComponent.Menu />}
-    // >
-    //     {
-    //         (isOpen: boolean, handleContextMenu: any, ref: any) => typeof children === "function" ? children((e) => openMenu(e, handleContextMenu, ref)) : children
-    //     }
-    // </Spicetify.ReactComponent.RightClickMenu>);
-
-    // return typeof children === "function" ? children(openMenu) : children;
 };
 
 export default RightClickMenu;
@@ -247,60 +203,4 @@ const Menu = ({ uri, position, isOwnedBySelf, closeMenu, event, playlistName, is
                 </li>
             ))}
     </>;
-
-    return (
-        <div
-            style={{
-                zIndex: "9999",
-                position: "absolute",
-                // set top and left to position of menu, but take into account the position of the current element
-                transform: `translate(${position.x}px, ${position.y}px)`,
-                inset: "0px auto auto 0px",
-                margin: "0px",
-            }}
-        >
-            <div
-                id="context-menu"
-            >
-                <ul
-                    role="menu"
-                    data-depth="0"
-                    className="main-contextMenu-menu"
-                >
-                    {
-                        options
-                            .filter(option => !!option)
-                            .map((option) => (
-                                <li
-                                    key={option!.key}
-                                    role="presentation"
-                                    className="main-contextMenu-menuItem"
-                                    onClick={() => {
-                                        option!.onClick();
-                                        close();
-                                    }}
-                                >
-                                    <button
-                                        className={`main-contextMenu-menuItemButton ${option!.dividerAfter ? "main-contextMenu-dividerAfter" : ""}`}
-                                        role="menuitem"
-                                    >
-                                        <div
-                                            dir="auto"
-                                            className="Type__TypeElement-sc-goli3j-0 hGXzYa ellipsis-one-line main-contextMenu-menuItemLabel"
-                                            data-encore-id="type"
-                                            style={{
-                                                display: "flex",
-                                                alignItems: "center",
-                                            }}
-                                        >
-                                            {getLocale(option!.key)}
-                                        </div>
-                                    </button>
-                                </li>
-                            ))
-                    }
-                </ul>
-            </div>
-        </div>
-    );
 };

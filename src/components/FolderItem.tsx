@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import SpotifyIcon from "../assets/icons/SpotifyIcon";
 import { SpotifyClient } from '../clients/SpotifyClient';
-import { Config, ConfigKey, getConfig } from "../config/Config";
+import { Config, ConfigKey } from "../config/Config";
 import { LocaleKey } from "../constants/constants";
 import { useConfigContext, useFilterContext } from "../context/context";
 import { Folder } from "../models/Folder";
@@ -106,7 +106,6 @@ const FolderItem = ({ searchTerm, folder, indentation = 0, deadEnd, recursiveOpe
         setFolderName(folder.name);
     };
 
-    // TODO:
     const renamePlaylist = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "Enter") {
             const newName = e.currentTarget.value;

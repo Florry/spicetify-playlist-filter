@@ -41,7 +41,6 @@ export class SpotifyClient {
         return response.uri.replace("spotify:user:", "");
     }
 
-    // TODO: something is bugging out here
     static async getPlaylistImages(nextUrl = "https://api.spotify.com/v1/me/playlists?limit=50"): Promise<any> {
         SpotifyClient.loading.set("getPlaylistData", true);
 

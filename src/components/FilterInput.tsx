@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import SpotifyIcon from "../assets/icons/SpotifyIcon";
 import { SpotifyClient } from "../clients/SpotifyClient";
-import { ConfigKey, /** getConfig*/ } from "../config/Config";
+import { ConfigKey } from "../config/Config";
 import { FilterState, SortOption } from "../constants/constants";
 import { FilterContext, useConfigContext } from "../context/context";
 import { Folder } from "../models/Folder";
@@ -14,6 +14,7 @@ import SortOrderSelector from "./SortOrderSelector";
 import { clearButtonStyling, searchInputStyling, searchStyling, ulStyling } from "./styling/PlaylistFilterStyling";
 
 let searchInputElement: HTMLInputElement | null = null;
+let focusInputField: () => void;
 
 /** Hack to be able to get config context in decoupled components, e.g. ConfigModal which is rendered on its own */
 export let mainConfigContext: any;
@@ -22,13 +23,7 @@ export let mainConfigContext: any;
 // TODO: ConfigContext should be used instead of getConfig so that changes to config are reflected immediately
 
 export function registerKeyboardShortcut() {
-    Spicetify.Keyboard.registerImportantShortcut(getConfiguredKeyboardKeys(), async () => {
-        /* Without setImmediate here, the value of searchInput is set to f for some reason */
-        setImmediate(() => {
-            if (searchInputElement)
-                searchInputElement.focus();
-        });
-    });
+    Spicetify.Keyboard.registerImportantShortcut(getConfiguredKeyboardKeys(), () => focusInputField());
 }
 
 interface Props {
@@ -82,7 +77,21 @@ export const FilterInput = (({ onFilter }: Props) => {
             setDraggingSourceName("");
         },
         refreshLibrary: () => setRefreshLibrary(true),
+    };
+
+    const [filterInputIsFocused, setFilterInputIsFocused] = useState(false);
+
+    const focusFilterInput = () => {
+        /* Without setImmediate here, the value of searchInput is set to f for some reason */
+        setImmediate(() => {
+            if (searchInputElement)
+                searchInputElement.focus();
+        });
+
+        setFilterInputIsFocused(true);
     }
+
+    focusInputField = focusFilterInput;
 
     useEffect(() => {
         if (!filterTerm.length && librarySortOption !== SortOption.Custom || !filterTerm.length && flattenLibrary) {
@@ -114,6 +123,12 @@ export const FilterInput = (({ onFilter }: Props) => {
     };
 
     useEffect(() => {
+        if (config[ConfigKey.UsePlaylistCovers] && !!filterTerm.length) {
+            SpotifyClient.getPlaylistImages();
+        }
+    }, [config[ConfigKey.UsePlaylistCovers]]);
+
+    useEffect(() => {
         if (refreshLibrary) {
             /** Spotify's backend needs some time to process changes to the library it seems, e.g. it returns removed playlist if fetched right after remove request is successful🤔 */
             setTimeout(loadAndPrepareLibrary, 700);
@@ -139,8 +154,6 @@ export const FilterInput = (({ onFilter }: Props) => {
             setDraggingSourceName(songName);
         } else {
             // Dragging from now playing?
-            console.log(e?.target);
-
             // @ts-ignore
             if (e?.target?.querySelector('a[referrer="now_playing_bar"]')) {
                 if (Spicetify.Player.data.track?.uri && Spicetify.Player.data.track?.metadata?.title) {
@@ -242,6 +255,8 @@ export const FilterInput = (({ onFilter }: Props) => {
     }
 
     const clearFilter = async () => {
+        setFilterInputIsFocused(false);
+
         if (librarySortOption === SortOption.Custom) {
             setSpotifyVanillaPlaylistListVisible(true);
         } else {
@@ -307,93 +322,100 @@ export const FilterInput = (({ onFilter }: Props) => {
     const shouldDisplaySorting = config[ConfigKey.UseSortingForFilteringOnly] && config[ConfigKey.UseSorting] ? !!filterTerm.length : config[ConfigKey.UseSorting];
     const shouldDisplayFlattenLibrary = config[ConfigKey.UseFlattenLibraryForFilteringOnly] && config[ConfigKey.UseFlattenLibrary] ? !!filterTerm.length : config[ConfigKey.UseFlattenLibrary];
 
-    // TODO: 
-    if (config[ConfigKey.HideFilteringWhenNotInUse]) {
-        return null;
-    }
-
     return (
         <>
             <FilterContext.Provider value={filterState}>
-                {/* <DebugPanel /> */}
+                <DebugPanel />
                 <div
                     id="playlist-filter-main-container"
                     className="main-navBar-navBarItem"
-                    style={searchStyling}
                 >
-                    <style>
-                        {
-                            `
+                    <div
+                        style={{
+                            ...searchStyling,
+                            ...(config[ConfigKey.HideFilteringWhenNotInUse] && !filterInputIsFocused && !filterTerm.length ? {
+                                position: "absolute",
+                                transition: "all 10s ease",
+                                top: -1000
+                            } : {}),
+                        }}
+                    >
+                        <style>
+                            {
+                                `
                                 #playlist-filter-results::-webkit-scrollbar {
                                     width: 12px;
                                 }
                             `
+                            }
+                        </style>
+                        <input
+                            id="playlist-filter-input"
+                            style={searchInputStyling}
+                            ref={searchInput}
+                            placeholder="Filter"
+                            value={filterTerm}
+                            onChange={(e) => filterPlaylists(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Escape") {
+                                    clearFilter();
+                                    searchInput.current?.blur();
+                                    setFilterInputIsFocused(false);
+                                }
+                            }}
+                            onBlur={() => {
+                                if (filterTerm.length === 0) {
+                                    resetSorting();
+                                    setTimeout(() => setFilterInputIsFocused(false), 100);
+                                }
+                            }}
+                        />
+                        {
+                            !!filterTerm.length &&
+                            (
+                                <Spicetify.ReactComponent.TooltipWrapper label="Clear filter" showDelay={100}>
+                                    <div
+                                        id="playlist-filter-clear-btn"
+                                        style={clearButtonStyling}
+                                        onClick={() => {
+                                            resetSorting();
+                                            clearFilter();
+                                        }}
+                                    >
+                                        <SpotifyIcon
+                                            style={{ fill: "var(--text-subdued)" }}
+                                            icon="x"
+                                        />
+                                    </div>
+                                </Spicetify.ReactComponent.TooltipWrapper>
+                            )
                         }
-                    </style>
-                    <input
-                        id="playlist-filter-input"
-                        style={searchInputStyling}
-                        ref={searchInput}
-                        placeholder="Filter"
-                        value={filterTerm}
-                        onChange={(e) => filterPlaylists(e.target.value)}
-                        onKeyDown={(e) => {
-                            if (e.key === "Escape") {
-                                clearFilter();
-                                searchInput.current?.blur();
-                            }
-                        }}
-                        onBlur={() => {
-                            if (filterTerm.length === 0) {
-                                resetSorting();
-                            }
-                        }}
-                    />
-                    {
-                        !!filterTerm.length &&
-                        (
-                            <Spicetify.ReactComponent.TooltipWrapper label="Clear filter" showDelay={100}>
-                                <div
-                                    id="playlist-filter-clear-btn"
-                                    style={clearButtonStyling}
-                                    onClick={() => {
-                                        resetSorting();
-                                        clearFilter();
-                                    }}
-                                >
-                                    <SpotifyIcon
-                                        style={{ fill: "var(--text-subdued)" }}
-                                        icon="x"
-                                    />
-                                </div>
-                            </Spicetify.ReactComponent.TooltipWrapper>
-                        )
-                    }
 
-                    {
-                        shouldDisplayFlattenLibrary ?
-                            <Spicetify.ReactComponent.TooltipWrapper label="Flatten library" showDelay={100}>
-                                <div
-                                    id="playlist-filter-clear-btn"
-                                    style={clearButtonStyling}
-                                    onClick={() => changeFlattenLibraryOption(!flattenLibrary)}
-                                >
-                                    <SpotifyIcon
-                                        style={{ fill: flattenLibrary ? "var(--spice-button-active)" : "var(--text-subdued)" }}
-                                        icon="library"
-                                    />
-                                </div>
-                            </Spicetify.ReactComponent.TooltipWrapper>
-                            : <></>
-                    }
+                        {
+                            shouldDisplayFlattenLibrary ?
+                                <Spicetify.ReactComponent.TooltipWrapper label="Flatten library" showDelay={100}>
+                                    <div
+                                        id="playlist-filter-clear-btn"
+                                        style={clearButtonStyling}
+                                        onClick={() => changeFlattenLibraryOption(!flattenLibrary)}
+                                    >
+                                        <SpotifyIcon
+                                            style={{ fill: flattenLibrary ? "var(--spice-button-active)" : "var(--text-subdued)" }}
+                                            icon="library"
+                                        />
+                                    </div>
+                                </Spicetify.ReactComponent.TooltipWrapper>
+                                : <></>
+                        }
 
-                    {
-                        shouldDisplaySorting ?
-                            !!filterTerm.length
-                                ? <SortOrderSelector onChange={changeSortOption} filtering={true} />
-                                : <SortOrderSelector onChange={changeLibrarySortOption} filtering={false} />
-                            : <></>
-                    }
+                        {
+                            shouldDisplaySorting ?
+                                !!filterTerm.length
+                                    ? <SortOrderSelector onChange={changeSortOption} filtering={true} />
+                                    : <SortOrderSelector onChange={changeLibrarySortOption} filtering={false} />
+                                : <></>
+                        }
+                    </div>
                 </div>
 
                 {

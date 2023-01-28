@@ -1,7 +1,6 @@
-import { SpotifyClient } from "../clients/SpotifyClient";
-import { getConfig, ConfigKey, ModifierKey } from "../config/Config";
+import { ConfigKey, getConfig, ModifierKey } from "../config/Config";
 import { LocaleKey, SortOption } from "../constants/constants";
-import { getImageUrlByPlaylistUri } from "../data/imageUrlRepo";
+import { getSmallestImageByPlaylistUri } from "../data/imageUrlRepo";
 import { Folder } from "../models/Folder";
 import { Item, ItemType } from "../models/Item";
 import { Placeholder } from "../models/Placeholder";
@@ -50,7 +49,7 @@ export function getNameWithHighlightedSearchTerm(name: string, searchTerm: strin
     else {
         // TODO: sanitize input to prevent regex crashes
         let highlightedName = name.replace(new RegExp(searchTerm, "gi"), (match: string) => {
-            return `<span class="playlist-filter-results-highlight" style="background-color: rgb(255 255 255 / 8%); color: #fff;">${match}</span>`;
+            return `<span class="playlist-filter-results-highlight" style="background-color: var(--spice-card); color: #fff;">${match}</span>`;
         });
 
         highlightedName = highlightedName.replace(/span> /g, "span>&nbsp;");
@@ -235,30 +234,32 @@ export function setFolderOpenState(folderUri: string, open: boolean) {
 }
 
 export async function getPlaylistArtwork(playlistUri: string) {
-    const imagesForUri = getImageUrlByPlaylistUri(playlistUri);
+    const imageForUri = getSmallestImageByPlaylistUri(playlistUri);
 
-    if (imagesForUri.length > 0) {
-        return imagesForUri[0].url;
+    if (imageForUri) {
+        return imageForUri;
     }
 
     return new Promise((resolve) => {
+        let timeout: NodeJS.Timeout | undefined = undefined;
+
         const interval = setInterval(() => {
-            const imagesForUri = getImageUrlByPlaylistUri(playlistUri);
+            const imageForUri = getSmallestImageByPlaylistUri(playlistUri);
 
-            if (imagesForUri) {
-                clearInterval(interval);
-
-                if (imagesForUri) {
-                    if (imagesForUri.length) {
-                        resolve(imagesForUri[0].url);
-                    } else {
-                        resolve("");
-                    }
+            if (imageForUri) {
+                if (timeout) {
+                    clearTimeout(timeout);
                 }
-            } else if (!SpotifyClient.loading.get("getPlaylistData")) {
-                SpotifyClient.getPlaylistImages();
+
+                clearInterval(interval);
+                resolve(imageForUri);
             }
         }, 100);
+
+        timeout = setTimeout(() => {
+            clearInterval(interval);
+            resolve("");
+        }, 3000);
     });
 }
 

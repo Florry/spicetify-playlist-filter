@@ -212,7 +212,7 @@ export const configItems: ConfigItem[][] = [
         {
             key: ConfigKey.HideFilteringWhenNotInUse,
             label: "Hide filtering when not in use",
-            description: "Only show the filtering input when you press the keyboard shortcut",
+            description: "Only shows the filtering input when you press the keyboard shortcut. It hides when you clear the input, press escape or click outside the input field without any input",
             type: ConfigType.Toggle,
             subKeyOf: ConfigKey.UseKeyboardShortcuts,
         },

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import CollaborativeIcon from "../assets/icons/CollaborativeIcon";
 import { SpotifyClient } from "../clients/SpotifyClient";
-import { ConfigKey, getConfig } from "../config/Config";
+import { ConfigKey } from "../config/Config";
 import { LocaleKey } from "../constants/constants";
 import { useConfigContext, useFilterContext } from "../context/context";
 import { Playlist } from "../models/Playlist";
@@ -35,11 +35,12 @@ export const PlaylistItem = ({ playlist, searchTerm, indentation = -2 }: Props) 
             Spicetify.Platform.History.push(href);
         }
     };
+
     useEffect(() => {
         if (config[ConfigKey.UsePlaylistCovers]) {
             getPlaylistArtwork(playlist.uri).then((img) => setImg(img as string));
         }
-    }, []);
+    }, [config[ConfigKey.UsePlaylistCovers]]);
 
     const addToPlaylist = (_e: React.DragEvent<any>) => {
         // TODO: Check if song exists
@@ -117,7 +118,9 @@ export const PlaylistItem = ({ playlist, searchTerm, indentation = -2 }: Props) 
     };
 
     const imageComponent = useMemo(() => (
-        img !== "" ? <img src={img}
+        img !== "" ? <img
+            src={img}
+            key={img}
             style={{
                 width: "1.5em",
                 height: "1.5em",
@@ -133,7 +136,7 @@ export const PlaylistItem = ({ playlist, searchTerm, indentation = -2 }: Props) 
                 padding: 3,
             }}
             dangerouslySetInnerHTML={{ __html: Spicetify.SVGIcons["playlist"] }} />
-    ), []);
+    ), [img]);
 
     // TODO: use ListItem component
     // return (

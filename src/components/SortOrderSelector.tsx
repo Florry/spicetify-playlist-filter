@@ -91,11 +91,8 @@ const SortOrderSelector = ({ onChange, filtering }: Props) => {
                                                             alignItems: "center",
                                                         }}
                                                     >
-                                                        {/* // first div should be aligned to the left and the second div to the right */}
                                                         <div
-                                                            style={{
-                                                                flex: 1,
-                                                            }}
+                                                            style={{ flex: 1, }}
                                                         >{SORT_LANG[option.value]}</div>
 
                                                         <div

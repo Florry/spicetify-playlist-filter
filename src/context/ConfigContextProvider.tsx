@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Config, ConfigKey, getConfigObject, resetConfigToDefault, setConfig, toggleConfig } from "../config/Config";
 import { ConfigState } from "../constants/constants";
-import { ConfigContext } from "../context/context";
+import { ConfigContext } from "./context";
 
 interface Props {
     children: React.ReactNode;
@@ -26,7 +26,6 @@ const ConfigContextProvider = ({ children }: Props) => {
     };
 
     const updateState = () => setConfigObj(getConfigObject());
-
 
     const configState = {
         config: configObj,

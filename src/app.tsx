@@ -1,12 +1,11 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import ConfigContextProvider from "./components/ConfigContextProvider";
+import ConfigContextProvider from "./context/ConfigContextProvider";
 import { FilterInput } from "./components/FilterInput";
 import { registerSubMenues } from "./menues/subMenues";
 
 // TODO:
 // - Clean up code, add some more memoization, etc
-// - Add right click menu (figure out RadioStationProvider problem)
 
 async function main() {
     const sidebarItem = await waitForSidebar();
