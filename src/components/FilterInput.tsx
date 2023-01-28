@@ -325,7 +325,7 @@ export const FilterInput = (({ onFilter }: Props) => {
     return (
         <>
             <FilterContext.Provider value={filterState}>
-                <DebugPanel />
+                {/* <DebugPanel /> */}
                 <div
                     id="playlist-filter-main-container"
                     className="main-navBar-navBarItem"
