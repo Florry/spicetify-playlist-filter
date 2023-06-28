@@ -1,4 +1,5 @@
-# Spicetify-playlist-filter
+# [DEPRECATED] Spicetify-playlist-filter
+**Depcrated due to this feature being added to spotify natively (🎉)**
 
 Adds filtering to the playlists panel to quickly find playlists by name without using the search box. 
 
